@@ -271,36 +271,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           const Spacer(),
 
           // Centered Logo & Brand Name
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const HithaLotus(size: 22, color: Color(0xFF0D9488)),
-              const SizedBox(width: 6),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text(
-                    'HITHA.LK',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      color: Color(0xFF0F766E),
-                    ),
-                  ),
-                  Text(
-                    'peace of mind',
-                    style: TextStyle(
-                      fontSize: 8.5,
-                      letterSpacing: 0.5,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          const HithaBrandLogo(
+            iconHeight: 28,
+            textHeight: 18,
+            spacing: 7,
           ),
 
           const Spacer(),

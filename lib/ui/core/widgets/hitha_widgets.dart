@@ -56,6 +56,104 @@ class _LotusPainter extends CustomPainter {
   bool shouldRepaint(_LotusPainter old) => old.color != color;
 }
 
+/// Official Hitha brand logo pairing the face emblem and stylized wordmark
+class HithaBrandLogo extends StatelessWidget {
+  const HithaBrandLogo({
+    super.key,
+    this.iconHeight = 28,
+    this.textHeight = 18,
+    this.spacing = 7,
+    this.showText = true,
+    this.isVertical = false,
+  });
+
+  final double iconHeight;
+  final double textHeight;
+  final double spacing;
+  final bool showText;
+  final bool isVertical;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isVertical) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/Hitha-face-logo.png',
+            height: iconHeight,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => const HithaLotus(size: 32, color: Color(0xFF0D9488)),
+          ),
+          if (showText) ...[
+            SizedBox(height: spacing),
+            Image.asset(
+              'assets/images/hitha-logo.png',
+              height: textHeight,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const Text(
+                'HITHA.LK',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: Color(0xFF0F766E),
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Image.asset(
+          'assets/images/Hitha-face-logo.png',
+          height: iconHeight,
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => const HithaLotus(size: 24, color: Color(0xFF0D9488)),
+        ),
+        if (showText) ...[
+          SizedBox(width: spacing),
+          Image.asset(
+            'assets/images/hitha-logo.png',
+            height: textHeight,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  'HITHA.LK',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                    color: Color(0xFF0F766E),
+                  ),
+                ),
+                Text(
+                  'peace of mind',
+                  style: TextStyle(
+                    fontSize: 8.5,
+                    letterSpacing: 0.5,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 /// 24px radius, white fill, 1px hairline border, subtle resting shadow.
 class HithaCard extends StatelessWidget {
   const HithaCard({

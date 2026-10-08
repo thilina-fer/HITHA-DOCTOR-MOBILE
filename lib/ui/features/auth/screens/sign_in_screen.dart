@@ -106,13 +106,11 @@ class _SignInScreenState extends State<SignInScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Centered Logo
-                      Image.asset(
-                        'assets/images/hitha_logo.png',
-                        width: 140,
-                        height: 140,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const HithaLotus(size: 60, color: HithaColors.forest),
+                      const HithaBrandLogo(
+                        iconHeight: 64,
+                        textHeight: 24,
+                        isVertical: true,
+                        spacing: 12,
                       ),
                       const SizedBox(height: 12),
 

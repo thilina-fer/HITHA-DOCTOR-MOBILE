@@ -130,13 +130,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Centered Logo
-                      Image.asset(
-                        'assets/images/hitha_logo.png',
-                        width: 130,
-                        height: 130,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const HithaLotus(size: 60, color: HithaColors.forest),
+                      const HithaBrandLogo(
+                        iconHeight: 60,
+                        textHeight: 22,
+                        isVertical: true,
+                        spacing: 10,
                       ),
                       const SizedBox(height: 12),
 
