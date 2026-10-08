@@ -10,6 +10,7 @@ import '../ui/features/bookings/screens/booking_details_screen.dart';
 import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
 import '../ui/features/common/placeholder_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
+import '../ui/features/wallet/screens/doctor_wallet_screen.dart';
 import '../ui/features/onboarding/screens/complete_profile_screen.dart';
 import '../ui/features/shell/doctor_shell.dart';
 import 'routes.dart';
@@ -90,11 +91,7 @@ GoRouter createRouter(AuthViewModel authVm) {
           ),
           GoRoute(
             path: Routes.wallet,
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Doctor Wallet & Payouts',
-              subtitle: 'Manage available liquid balance, escrow holds, and CEFT bank withdrawals.',
-              badgeText: 'FLOW 12',
-            ),
+            builder: (context, state) => const DoctorWalletScreen(),
           ),
           GoRoute(
             path: Routes.profile,
