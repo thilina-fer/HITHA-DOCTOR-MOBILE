@@ -18,25 +18,109 @@ class DoctorDashboardScreen extends StatefulWidget {
 
 class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedDayIndex = 1; // Default to Friday Oct 9 (index 1)
+  int _selectedDateIndex = 0; // Default to OCT 01 SUN (index 0) matching sketch
 
-  final List<Map<String, String>> _days = const [
-    {'day': 'THU', 'date': 'Oct 8'},
-    {'day': 'FRI', 'date': 'Oct 9'},
-    {'day': 'SAT', 'date': 'Oct 10'},
-    {'day': 'SUN', 'date': 'Oct 11'},
-    {'day': 'MON', 'date': 'Oct 12'},
-    {'day': 'TUE', 'date': 'Oct 13'},
-    {'day': 'WED', 'date': 'Oct 14'},
+  final List<Map<String, String>> _dateCards = const [
+    {'month': 'OCT', 'day': '01', 'weekday': 'SUN'},
+    {'month': 'OCT', 'day': '02', 'weekday': 'MON'},
+    {'month': 'OCT', 'day': '03', 'weekday': 'TUE'},
+    {'month': 'OCT', 'day': '04', 'weekday': 'WED'},
+    {'month': 'OCT', 'day': '05', 'weekday': 'THU'},
+    {'month': 'OCT', 'day': '06', 'weekday': 'FRI'},
+    {'month': 'OCT', 'day': '07', 'weekday': 'SAT'},
   ];
+
+  late final Map<int, List<Map<String, dynamic>>> _slotData;
 
   @override
   void initState() {
     super.initState();
+    _slotData = {
+      0: [
+        {
+          'time': '09:00 AM – 12:00 PM',
+          'label': 'Morning Telehealth',
+          'slots': '4 Sessions Max',
+          'active': true,
+        },
+        {
+          'time': '02:00 PM – 05:00 PM',
+          'label': 'Afternoon Consultations',
+          'slots': '4 Sessions Max',
+          'active': true,
+        },
+        {
+          'time': '06:30 PM – 09:00 PM',
+          'label': 'Evening Emergency Queue',
+          'slots': '3 Sessions Max',
+          'active': false,
+        },
+      ],
+      1: [
+        {
+          'time': '10:00 AM – 01:00 PM',
+          'label': 'Regular Telehealth',
+          'slots': '4 Sessions Max',
+          'active': true,
+        },
+        {
+          'time': '03:00 PM – 06:00 PM',
+          'label': 'Follow-up Consultations',
+          'slots': '4 Sessions Max',
+          'active': true,
+        },
+      ],
+      2: [
+        {
+          'time': '09:00 AM – 12:00 PM',
+          'label': 'Morning Telehealth',
+          'slots': '4 Sessions Max',
+          'active': true,
+        },
+        {
+          'time': '01:30 PM – 04:30 PM',
+          'label': 'Specialized CBT Care',
+          'slots': '3 Sessions Max',
+          'active': true,
+        },
+      ],
+      3: [
+        {
+          'time': '11:40 AM – 12:25 PM',
+          'label': 'Consultation Slot',
+          'slots': '1 Session Booked',
+          'active': true,
+        },
+        {
+          'time': '02:00 PM – 06:00 PM',
+          'label': 'Open Queue Availability',
+          'slots': '5 Sessions Max',
+          'active': true,
+        },
+      ],
+    };
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().loadDashboard();
     });
   }
+
+  List<Map<String, dynamic>> get _currentSlots =>
+      _slotData[_selectedDateIndex] ??
+      [
+        {
+          'time': '09:00 AM – 01:00 PM',
+          'label': 'General Telehealth',
+          'slots': '4 Sessions Max',
+          'active': true,
+        },
+        {
+          'time': '03:00 PM – 06:00 PM',
+          'label': 'Evening Consultations',
+          'slots': '3 Sessions Max',
+          'active': true,
+        },
+      ];
 
   void _showStatusPicker(BuildContext context, AuthViewModel authVm) {
     showModalBottomSheet(
@@ -155,7 +239,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                     child: Icon(Icons.check, color: Color(0xFF16A34A), size: 18),
                   ),
                   title: const Text('Consultation Confirmed', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  subtitle: const Text('Anonymous Patient (#a4b5517) scheduled for today at 11:40 AM.', style: TextStyle(fontSize: 12)),
+                  subtitle: const Text('Anonymous Patient (#123654) scheduled for 11:40 AM.', style: TextStyle(fontSize: 12)),
                   contentPadding: EdgeInsets.zero,
                 ),
                 const Divider(),
@@ -184,13 +268,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF4F8F6),
+      backgroundColor: const Color(0xFFF8FAFC),
       drawer: _buildDrawer(context, authVm, doctor),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // 1. Top Custom App Bar matching mockup
+            // 1. Top Custom App Bar
             _buildTopAppBar(context, authVm, doctor),
 
             // 2. Scrollable Body
@@ -214,9 +298,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Greeting & Status Header with Serene Botanical illustration
+                      // Clean Greeting & Status Header (Leaves removed)
                       _buildGreetingHeader(context, authVm, doctor),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
 
                       // SLMC Review Banner (if unverified or pending)
                       if (doctor != null && doctor.verificationStatus != VerificationStatus.ACTIVE) ...[
@@ -224,12 +308,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Card 1: Next Session Card
-                      _buildNextSessionCard(context),
-                      const SizedBox(height: 18),
+                      // Section 1: Next Session Card (Matching Image 1)
+                      _buildNextSessionSection(context),
+                      const SizedBox(height: 24),
 
-                      // Card 2: Today's Schedule Card
-                      _buildTodayScheduleCard(context),
+                      // Section 2: Availability Section (Matching Image 2)
+                      _buildAvailabilitySection(context),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -341,662 +425,596 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Greeting & Status Header with Leaf Illustration ---
+  // --- Clean Greeting & Status Header (Leaves Removed) ---
   Widget _buildGreetingHeader(BuildContext context, AuthViewModel authVm, DoctorProfile? doctor) {
     final status = doctor?.status ?? DoctorStatus.ONLINE;
     final doctorName = (doctor != null && doctor.firstName.isNotEmpty)
         ? 'Dr. ${doctor.firstName}'
         : 'Dr. Thilina';
 
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Serene Botanical Leaves in Top-Right
-        const Positioned(
-          right: -10,
-          top: -10,
-          width: 140,
-          height: 140,
-          child: CustomPaint(
-            painter: _SereneBotanicalLeavesPainter(),
+        const Text(
+          'Good morning,',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF64748B),
           ),
         ),
-
-        // Text & Status Row
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        const SizedBox(height: 3),
+        Row(
           children: [
-            const Text(
-              'Good morning,',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF64748B),
+            Text(
+              doctorName,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+                color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(height: 3),
-            Row(
-              children: [
-                Text(
-                  doctorName,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-                // Interactive Status Pill Dropdown
-                GestureDetector(
-                  onTap: () => _showStatusPicker(context, authVm),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F8F0),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFC6F0D9)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: status == DoctorStatus.ONLINE
-                                ? const Color(0xFF10B981)
-                                : status == DoctorStatus.BUSY
-                                    ? const Color(0xFFF59E0B)
-                                    : const Color(0xFF94A3B8),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          status.label,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF065F46),
-                          ),
-                        ),
-                        const SizedBox(width: 3),
-                        const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 16,
-                          color: Color(0xFF065F46),
-                        ),
-                      ],
-                    ),
-                  ),
+            // Interactive Status Pill Dropdown
+            GestureDetector(
+              onTap: () => _showStatusPicker(context, authVm),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F8F0),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFC6F0D9)),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Welcome back to your digital sanctuary.\nYou have 2 upcoming consultations today.',
-              style: TextStyle(
-                fontSize: 13.5,
-                height: 1.45,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w400,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: status == DoctorStatus.ONLINE
+                            ? const Color(0xFF10B981)
+                            : status == DoctorStatus.BUSY
+                                ? const Color(0xFFF59E0B)
+                                : const Color(0xFF94A3B8),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      status.label,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF065F46),
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 16,
+                      color: Color(0xFF065F46),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Welcome back to your digital sanctuary.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ],
     );
   }
 
-  // --- Next Session Card ---
-  Widget _buildNextSessionCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFEDF2F7), width: 1.2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A0D3B66),
-            blurRadius: 18,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Video icon + "Next Session" + "View All ->"
-          Row(
-            children: [
-              const Icon(Icons.videocam_outlined, color: Color(0xFF0D9488), size: 24),
-              const SizedBox(width: 8),
-              const Text(
-                'Next Session',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+  // --- Section 1: Next Session Card (Matching Image 1) ---
+  Widget _buildNextSessionSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title Row: Next Session + View All
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Next Session',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => context.go(Routes.bookings),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Text(
+                  'View All',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
               ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => context.go(Routes.bookings),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text(
-                        'View All',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F766E),
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF0F766E)),
-                    ],
-                  ),
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // Next Session Card Container
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.2),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0C0D3B66),
+                blurRadius: 18,
+                offset: Offset(0, 6),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Details Row: Date Block + Time/Patient + Confirmed Badge
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(18),
+          child: Column(
             children: [
-              // Date Block
-              Container(
-                width: 58,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  children: const [
-                    Text(
-                      'OCT',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF64748B),
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left: Grey Date Box (Matching Image 1)
+                  Container(
+                    width: 88,
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      '9',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'FRI',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              // Patient Info & Time
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: const [
-                        Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
-                        SizedBox(width: 5),
                         Text(
-                          '11:40 AM – 12:25 PM',
+                          'OCT',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          '07',
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            height: 1.1,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'WED',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Anonymous Patient',
-                      style: TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Ref: #a4b5517',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF94A3B8),
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                  const SizedBox(width: 16),
 
-              // Confirmed Status Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF16A34A)),
-                    SizedBox(width: 4),
-                    Text(
-                      'Confirmed',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF16A34A),
-                      ),
+                  // Right: Session Details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Time + Green Status Pill
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(Icons.access_time, size: 14, color: Color(0xFF1E293B)),
+                                SizedBox(width: 5),
+                                Text(
+                                  '11.40 AM - 12.25 PM',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Green Indicator Pill
+                            Container(
+                              width: 38,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00E676),
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x6600E676),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Patient Name
+                        const Text(
+                          'Anonymous Patient',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Ref
+                        const Text(
+                          'REF : 123654',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF64748B),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Session Fee Label & Amount
+                        const Text(
+                          'SESSION FEE :',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF64748B),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        const Text(
+                          '5000.00',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Full width JOIN NOW Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => context.push(Routes.meetingPath('123654')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0C3854),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'JOIN NOW',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+        ),
+      ],
+    );
+  }
 
-          // Fee & "Join Room" Button Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // --- Section 2: Availability Section (Matching Image 2) ---
+  Widget _buildAvailabilitySection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section Title: "Availability" + Configure action
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Availability',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => context.go(Routes.availability),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text(
+                    'Configure',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: HithaColors.forest,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.tune_rounded, size: 16, color: HithaColors.forest),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Horizontal Date Cards matching Image 2 sketch
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: List.generate(_dateCards.length, (index) {
+              final card = _dateCards[index];
+              final isSelected = _selectedDateIndex == index;
+
+              return Padding(
+                padding: EdgeInsets.only(right: index == _dateCards.length - 1 ? 0 : 12),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDateIndex = index;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 76,
+                    height: 104,
+                    decoration: BoxDecoration(
+                      color: isSelected ? HithaColors.forest : Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isSelected ? HithaColors.forest : const Color(0xFFE2E8F0),
+                        width: isSelected ? 1.5 : 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isSelected ? const Color(0x280D3B66) : const Color(0x060D3B66),
+                          blurRadius: isSelected ? 12 : 6,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          card['month']!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected ? const Color(0xFFD1FAE5) : const Color(0xFF64748B),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          card['day']!,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: isSelected ? Colors.white : const Color(0xFF0F172A),
+                            height: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          card['weekday']!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: isSelected ? const Color(0xFFD1FAE5) : const Color(0xFF64748B),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // "Time slots" Container matching Image 2 sketch
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.2),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0C0D3B66),
+                blurRadius: 18,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Session Fee
+              // Header
               Row(
                 children: [
-                  const Icon(Icons.payments_outlined, color: Color(0xFF0D9488), size: 24),
+                  const Icon(Icons.access_time_rounded, color: Color(0xFF0D9488), size: 20),
                   const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Session Fee',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
+                  const Text(
+                    'Time slots',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F8F0),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      '${_currentSlots.where((s) => s['active'] == true).length} Active',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF065F46),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Time slot rows
+              ...List.generate(_currentSlots.length, (slotIdx) {
+                final slot = _currentSlots[slotIdx];
+                final isActive = slot['active'] as bool;
+
+                return Container(
+                  margin: EdgeInsets.only(bottom: slotIdx == _currentSlots.length - 1 ? 0 : 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isActive ? const Color(0xFFF8FAFC) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isActive ? const Color(0xFFE2E8F0) : const Color(0xFFCBD5E1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isActive ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                          shape: BoxShape.circle,
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              slot['time'] as String,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${slot['label']} • ${slot['slots']}',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: isActive,
+                        activeThumbColor: HithaColors.forest,
+                        onChanged: (val) {
+                          setState(() {
+                            slot['active'] = val;
+                          });
+                          showHithaSnack(
+                            context,
+                            'Slot ${slot['time']} ${val ? "activated" : "paused"}',
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 14),
+
+              // Manage & Add Time Slots button
+              InkWell(
+                onTap: () => context.go(Routes.availability),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF0D9488)),
+                      SizedBox(width: 8),
                       Text(
-                        'LKR 5,000',
+                        'Manage & Add Time Slots',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
+                          color: Color(0xFF0F766E),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-
-              // Join Room Button
-              ElevatedButton.icon(
-                onPressed: () => context.push(Routes.meetingPath('a4b5517')),
-                icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 18),
-                label: const Text(
-                  'Join Room',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0C3854),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  // --- Today's Schedule Card ---
-  Widget _buildTodayScheduleCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFEDF2F7), width: 1.2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A0D3B66),
-            blurRadius: 18,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Calendar Icon + Title + Date
-          Row(
-            children: const [
-              Icon(Icons.calendar_today_outlined, color: Color(0xFF0D9488), size: 22),
-              SizedBox(width: 8),
-              Text(
-                "Today's Schedule",
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              Spacer(),
-              Text(
-                'Fri, Oct 9, 2026',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Horizontal 7-Day Selector Strip
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(_days.length, (index) {
-                final dayData = _days[index];
-                final isSelected = _selectedDayIndex == index;
-
-                return Padding(
-                  padding: EdgeInsets.only(right: index == _days.length - 1 ? 0 : 8),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedDayIndex = index;
-                      });
-                    },
-                    child: Container(
-                      width: 52,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF065F46) : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFF065F46) : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            dayData['day']!,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: isSelected ? Colors.white : const Color(0xFF64748B),
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            dayData['date']!,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w800,
-                              color: isSelected ? Colors.white : const Color(0xFF0F172A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Timeline Queue: Item 1
-          _buildTimelineRow(
-            timeStart: '11:40 AM',
-            timeEnd: '12:25 PM',
-            patient: 'Anonymous Patient',
-            ref: 'Ref: #a4b5517',
-            statusText: 'Confirmed',
-            bookingId: 'a4b5517',
-            isFirst: true,
-            isLast: false,
-          ),
-
-          // Timeline Queue: Item 2
-          _buildTimelineRow(
-            timeStart: '01:30 PM',
-            timeEnd: '02:15 PM',
-            patient: 'Anonymous Patient',
-            ref: 'Ref: #zc371bfe',
-            statusText: 'Confirmed',
-            bookingId: 'zc371bfe',
-            isFirst: false,
-            isLast: true,
-          ),
-          const SizedBox(height: 18),
-
-          // Full width "Manage Availability" Button
-          InkWell(
-            onTap: () => context.go(Routes.availability),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF0F172A)),
-                  SizedBox(width: 10),
-                  Text(
-                    'Manage Availability',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  Spacer(),
-                  Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF64748B)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- Timeline Consultation Row ---
-  Widget _buildTimelineRow({
-    required String timeStart,
-    required String timeEnd,
-    required String patient,
-    required String ref,
-    required String statusText,
-    required String bookingId,
-    required bool isFirst,
-    required bool isLast,
-  }) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline indicator & line
-          SizedBox(
-            width: 18,
-            child: Column(
-              children: [
-                const SizedBox(height: 4),
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF0D9488),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: const Color(0xFFE2E8F0),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Time Column
-          SizedBox(
-            width: 72,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  timeStart,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  timeEnd,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Patient Name & Ref
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  patient,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  ref,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF94A3B8),
-                    fontFamily: 'monospace',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-
-          // Confirmed Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.check_circle_rounded, size: 12, color: Color(0xFF16A34A)),
-                SizedBox(width: 3),
-                Text(
-                  'Confirmed',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF16A34A),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Join Button
-          ElevatedButton.icon(
-            onPressed: () => context.push(Routes.meetingPath(bookingId)),
-            icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 14),
-            label: const Text(
-              'Join',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0C3854),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              minimumSize: const Size(60, 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1151,49 +1169,4 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       ),
     );
   }
-}
-
-/// Translucent sage botanical leaves painter for serene wellness sanctuary ambiance
-class _SereneBotanicalLeavesPainter extends CustomPainter {
-  const _SereneBotanicalLeavesPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final leafPaint = Paint()
-      ..color = const Color(0x3510B981) // Translucent emerald mint
-      ..style = PaintingStyle.fill;
-
-    final stemPaint = Paint()
-      ..color = const Color(0x300D9488)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-
-    final stemPath = Path()
-      ..moveTo(size.width, 0)
-      ..cubicTo(size.width * 0.82, size.height * 0.35, size.width * 0.68, size.height * 0.7, size.width * 0.58, size.height);
-    canvas.drawPath(stemPath, stemPaint);
-
-    void drawLeaf(double cx, double cy, double rx, double ry, double angle) {
-      canvas.save();
-      canvas.translate(cx, cy);
-      canvas.rotate(angle);
-      final path = Path()
-        ..moveTo(0, -ry)
-        ..quadraticBezierTo(rx, 0, 0, ry)
-        ..quadraticBezierTo(-rx, 0, 0, -ry)
-        ..close();
-      canvas.drawPath(path, leafPaint);
-      canvas.restore();
-    }
-
-    drawLeaf(size.width * 0.88, size.height * 0.22, 16, 38, -0.6);
-    drawLeaf(size.width * 0.75, size.height * 0.32, 20, 44, -0.9);
-    drawLeaf(size.width * 0.80, size.height * 0.52, 18, 40, -0.4);
-    drawLeaf(size.width * 0.65, size.height * 0.64, 20, 46, -0.8);
-    drawLeaf(size.width * 0.84, size.height * 0.76, 16, 36, -0.2);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
