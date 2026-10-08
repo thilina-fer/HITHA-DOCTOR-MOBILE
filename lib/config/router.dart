@@ -5,6 +5,7 @@ import '../ui/features/auth/screens/register_screen.dart';
 import '../ui/features/auth/screens/sign_in_screen.dart';
 import '../ui/features/auth/screens/verify_phone_screen.dart';
 import '../ui/features/auth/view_models/auth_view_model.dart';
+import '../ui/features/availability/screens/doctor_availability_screen.dart';
 import '../ui/features/common/placeholder_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
 import '../ui/features/onboarding/screens/complete_profile_screen.dart';
@@ -79,11 +80,7 @@ GoRouter createRouter(AuthViewModel authVm) {
           ),
           GoRoute(
             path: Routes.availability,
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Availability & Schedule',
-              subtitle: 'Configure weekly templates, custom date slots, and holiday leaves.',
-              badgeText: 'FLOW 07',
-            ),
+            builder: (context, state) => const DoctorAvailabilityScreen(),
           ),
           GoRoute(
             path: Routes.bookings,

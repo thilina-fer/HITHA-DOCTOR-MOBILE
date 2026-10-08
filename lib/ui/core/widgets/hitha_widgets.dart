@@ -64,6 +64,7 @@ class HithaCard extends StatelessWidget {
     this.onTap,
     this.color = Colors.white,
     this.padding = const EdgeInsets.all(20),
+    this.margin,
     this.radius = HithaRadius.card,
     this.borderColor = HithaColors.hairline,
   });
@@ -72,6 +73,7 @@ class HithaCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color color;
   final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? margin;
   final double radius;
   final Color borderColor;
 
@@ -81,7 +83,7 @@ class HithaCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       side: BorderSide(color: borderColor),
     );
-    return DecoratedBox(
+    final card = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         boxShadow: HithaShadows.resting,
@@ -93,6 +95,10 @@ class HithaCard extends StatelessWidget {
         child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
       ),
     );
+    if (margin != null) {
+      return Padding(padding: margin!, child: card);
+    }
+    return card;
   }
 }
 

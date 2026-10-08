@@ -378,3 +378,238 @@ class WalletSummary {
     );
   }
 }
+
+class WeeklyTemplateItem {
+  final String id;
+  final int dayOfWeek; // 1 = Monday, 7 = Sunday
+  final String startTime;
+  final String endTime;
+  final bool isActive;
+
+  const WeeklyTemplateItem({
+    this.id = '',
+    required this.dayOfWeek,
+    required this.startTime,
+    required this.endTime,
+    this.isActive = true,
+  });
+
+  String get dayName {
+    const names = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return (dayOfWeek >= 1 && dayOfWeek <= 7) ? names[dayOfWeek] : 'Day $dayOfWeek';
+  }
+
+  WeeklyTemplateItem copyWith({
+    String? id,
+    int? dayOfWeek,
+    String? startTime,
+    String? endTime,
+    bool? isActive,
+  }) {
+    return WeeklyTemplateItem(
+      id: id ?? this.id,
+      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+
+  factory WeeklyTemplateItem.fromJson(Map<String, dynamic> json) {
+    final s = json['startTime'] as String? ?? '09:00';
+    final e = json['endTime'] as String? ?? '17:00';
+    return WeeklyTemplateItem(
+      id: '${json['id'] ?? ''}',
+      dayOfWeek: json['dayOfWeek'] as int? ?? 1,
+      startTime: s.length >= 5 ? s.substring(0, 5) : s,
+      endTime: e.length >= 5 ? e.substring(0, 5) : e,
+      isActive: json['isActive'] as bool? ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'dayOfWeek': dayOfWeek,
+        'startTime': startTime.length == 5 ? '$startTime:00' : startTime,
+        'endTime': endTime.length == 5 ? '$endTime:00' : endTime,
+      };
+}
+
+class CustomSlotItem {
+  final String id;
+  final DateTime startTime;
+  final DateTime endTime;
+
+  const CustomSlotItem({
+    required this.id,
+    required this.startTime,
+    required this.endTime,
+  });
+
+  factory CustomSlotItem.fromJson(Map<String, dynamic> json) {
+    return CustomSlotItem(
+      id: '${json['id'] ?? ''}',
+      startTime: DateTime.tryParse(json['startTime'] as String? ?? '') ?? DateTime.now(),
+      endTime: DateTime.tryParse(json['endTime'] as String? ?? '') ?? DateTime.now().add(const Duration(hours: 1)),
+    );
+  }
+}
+
+class BlockedDateItem {
+  final String id;
+  final DateTime startTime;
+  final DateTime endTime;
+  final String reason;
+
+  const BlockedDateItem({
+    required this.id,
+    required this.startTime,
+    required this.endTime,
+    this.reason = '',
+  });
+
+  factory BlockedDateItem.fromJson(Map<String, dynamic> json) {
+    return BlockedDateItem(
+      id: '${json['id'] ?? ''}',
+      startTime: DateTime.tryParse(json['startTime'] as String? ?? '') ?? DateTime.now(),
+      endTime: DateTime.tryParse(json['endTime'] as String? ?? '') ?? DateTime.now().add(const Duration(days: 1)),
+      reason: json['reason'] as String? ?? '',
+    );
+  }
+}
+
+class BankInfo {
+  final String code;
+  final String name;
+
+  const BankInfo({required this.code, required this.name});
+
+  factory BankInfo.fromJson(Map<String, dynamic> json) {
+    return BankInfo(
+      code: '${json['code'] ?? json['id'] ?? ''}',
+      name: '${json['name'] ?? json['bankName'] ?? ''}',
+    );
+  }
+}
+
+class PayoutMethod {
+  final String id;
+  final String bankName;
+  final String accountNumber;
+  final String accountHolderName;
+  final String branchName;
+  final bool isDefault;
+
+  const PayoutMethod({
+    required this.id,
+    required this.bankName,
+    required this.accountNumber,
+    required this.accountHolderName,
+    this.branchName = '',
+    this.isDefault = false,
+  });
+
+  factory PayoutMethod.fromJson(Map<String, dynamic> json) {
+    return PayoutMethod(
+      id: '${json['id'] ?? ''}',
+      bankName: json['bankName'] as String? ?? '',
+      accountNumber: json['accountNumber'] as String? ?? '',
+      accountHolderName: json['accountHolderName'] as String? ?? '',
+      branchName: json['branchName'] as String? ?? '',
+      isDefault: json['isDefault'] as bool? ?? false,
+    );
+  }
+}
+
+class WalletTransaction {
+  final String id;
+  final String description;
+  final double amountLkr;
+  final String type;
+  final DateTime createdAt;
+  final String status;
+
+  const WalletTransaction({
+    required this.id,
+    required this.description,
+    required this.amountLkr,
+    required this.type,
+    required this.createdAt,
+    this.status = 'COMPLETED',
+  });
+
+  factory WalletTransaction.fromJson(Map<String, dynamic> json) {
+    return WalletTransaction(
+      id: '${json['id'] ?? ''}',
+      description: json['description'] as String? ?? 'Consultation credit',
+      amountLkr: (json['amountLkr'] as num?)?.toDouble() ?? (json['amount'] as num?)?.toDouble() ?? 0.0,
+      type: json['type'] as String? ?? json['entryType'] as String? ?? 'CREDIT',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      status: json['status'] as String? ?? 'COMPLETED',
+    );
+  }
+}
+
+class PriceRequestItem {
+  final String id;
+  final double currentPriceLkr;
+  final double requestedPriceLkr;
+  final String reason;
+  final String status;
+  final DateTime createdAt;
+
+  const PriceRequestItem({
+    required this.id,
+    required this.currentPriceLkr,
+    required this.requestedPriceLkr,
+    required this.reason,
+    required this.status,
+    required this.createdAt,
+  });
+
+  factory PriceRequestItem.fromJson(Map<String, dynamic> json) {
+    return PriceRequestItem(
+      id: '${json['id'] ?? ''}',
+      currentPriceLkr: (json['currentPriceLkr'] as num?)?.toDouble() ?? 3000.0,
+      requestedPriceLkr: (json['requestedPriceLkr'] as num?)?.toDouble() ?? 3500.0,
+      reason: json['reason'] as String? ?? '',
+      status: json['status'] as String? ?? 'PENDING',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+class ArticleItem {
+  final String id;
+  final String title;
+  final String slug;
+  final String excerpt;
+  final String? coverImageUrl;
+  final String status;
+  final DateTime publishedAt;
+  final int readTimeMinutes;
+
+  const ArticleItem({
+    required this.id,
+    required this.title,
+    required this.slug,
+    required this.excerpt,
+    this.coverImageUrl,
+    required this.status,
+    required this.publishedAt,
+    this.readTimeMinutes = 4,
+  });
+
+  factory ArticleItem.fromJson(Map<String, dynamic> json) {
+    return ArticleItem(
+      id: '${json['id'] ?? ''}',
+      title: json['title'] as String? ?? '',
+      slug: json['slug'] as String? ?? '',
+      excerpt: json['excerpt'] as String? ?? json['content'] as String? ?? '',
+      coverImageUrl: json['coverImageUrl'] as String? ?? json['featuredImage'] as String?,
+      status: json['status'] as String? ?? 'PUBLISHED',
+      publishedAt: DateTime.tryParse(json['publishedAt'] as String? ?? json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      readTimeMinutes: (json['readTimeMinutes'] as num?)?.toInt() ?? 4,
+    );
+  }
+}
+
