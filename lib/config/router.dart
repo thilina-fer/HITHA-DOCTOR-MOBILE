@@ -10,6 +10,7 @@ import '../ui/features/bookings/screens/booking_details_screen.dart';
 import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
 import '../ui/features/common/placeholder_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
+import '../ui/features/pricing/screens/doctor_pricing_screen.dart';
 import '../ui/features/profile/screens/doctor_profile_screen.dart';
 import '../ui/features/wallet/screens/doctor_wallet_screen.dart';
 import '../ui/features/onboarding/screens/complete_profile_screen.dart';
@@ -120,11 +121,7 @@ GoRouter createRouter(AuthViewModel authVm) {
       ),
       GoRoute(
         path: Routes.pricing,
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Pricing & Overrides',
-          subtitle: 'View category base fee and submit custom consultation fee requests.',
-          badgeText: 'FLOW 06.6',
-        ),
+        builder: (context, state) => const DoctorPricingScreen(),
       ),
       GoRoute(
         path: Routes.bookingDetails,
