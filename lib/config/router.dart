@@ -9,9 +9,9 @@ import '../ui/features/availability/screens/doctor_availability_screen.dart';
 import '../ui/features/blogs/screens/doctor_blogs_screen.dart';
 import '../ui/features/bookings/screens/booking_details_screen.dart';
 import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
-import '../ui/features/common/placeholder_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
 import '../ui/features/finance/screens/doctor_finance_screen.dart';
+import '../ui/features/meeting/screens/telehealth_meeting_screen.dart';
 import '../ui/features/pricing/screens/doctor_pricing_screen.dart';
 import '../ui/features/profile/screens/doctor_profile_screen.dart';
 import '../ui/features/wallet/screens/doctor_wallet_screen.dart';
@@ -128,11 +128,7 @@ GoRouter createRouter(AuthViewModel authVm) {
         path: Routes.meeting,
         builder: (context, state) {
           final id = state.pathParameters['bookingId'] ?? '';
-          return PlaceholderScreen(
-            title: 'Live Telehealth Session #$id',
-            subtitle: 'LiveKit WebRTC video room with real-time clinical notes & digital prescription writer.',
-            badgeText: 'FLOW 10 & 11',
-          );
+          return TelehealthMeetingScreen(bookingId: id);
         },
       ),
     ],
