@@ -1,3 +1,4 @@
+import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 import '../services/sample_data.dart';
@@ -16,14 +17,14 @@ class DashboardRepository {
       } else if (res is List) {
         rawList = res;
       }
-      if (rawList.isNotEmpty) {
-        return rawList
-            .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-      return SampleData.todayBookings;
+      return rawList
+          .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      return SampleData.todayBookings;
+      if (AppConfig.demoMode) {
+        return SampleData.todayBookings;
+      }
+      return [];
     }
   }
 
@@ -33,9 +34,12 @@ class DashboardRepository {
       if (res is Map<String, dynamic>) {
         return WalletSummary.fromJson(res);
       }
-      return SampleData.walletSummary;
+      return AppConfig.demoMode ? SampleData.walletSummary : const WalletSummary();
     } catch (e) {
-      return SampleData.walletSummary;
+      if (AppConfig.demoMode) {
+        return SampleData.walletSummary;
+      }
+      return const WalletSummary();
     }
   }
 
@@ -52,12 +56,15 @@ class DashboardRepository {
         'endDate': endIso,
       });
 
-      if (res is List && res.isNotEmpty) {
+      if (res is List) {
         return res.map((e) => AvailabilityWindow.fromJson(e as Map<String, dynamic>)).toList();
       }
-      return SampleData.availabilityWindows;
+      return AppConfig.demoMode ? SampleData.availabilityWindows : [];
     } catch (e) {
-      return SampleData.availabilityWindows;
+      if (AppConfig.demoMode) {
+        return SampleData.availabilityWindows;
+      }
+      return [];
     }
   }
 }

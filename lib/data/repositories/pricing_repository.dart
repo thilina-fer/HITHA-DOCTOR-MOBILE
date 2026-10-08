@@ -1,3 +1,4 @@
+import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 
@@ -9,12 +10,12 @@ class PricingRepository {
   Future<List<PriceRequestItem>> getPriceRequests() async {
     try {
       final res = await _apiClient.get('/doctors/price-requests');
-      if (res is List && res.isNotEmpty) {
+      if (res is List) {
         return res.map((e) => PriceRequestItem.fromJson(e as Map<String, dynamic>)).toList();
       }
-      return _sampleHistory;
+      return AppConfig.demoMode ? _sampleHistory : [];
     } catch (_) {
-      return _sampleHistory;
+      return AppConfig.demoMode ? _sampleHistory : [];
     }
   }
 

@@ -243,6 +243,34 @@ class DoctorAuthRepository {
     }
   }
 
+  Future<String?> uploadFile({required String filePath, String folder = 'uploads'}) async {
+    try {
+      final res = await _apiClient.uploadFile('/files/upload?folder=$folder', filePath: filePath);
+      if (res is String) return res;
+      if (res is Map<String, dynamic>) return res['url'] as String? ?? res['fileUrl'] as String?;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> updateProfilePicture(String url) async {
+    try {
+      await _apiClient.patch('/doctors/me/profile-picture', {
+        'profilePicture': url,
+      });
+      if (_cachedProfile != null) {
+        _cachedProfile = _cachedProfile!.copyWith(profilePictureUrl: url);
+      }
+    } catch (e) {
+      if (AppConfig.demoMode && _cachedProfile != null) {
+        _cachedProfile = _cachedProfile!.copyWith(profilePictureUrl: url);
+        return;
+      }
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _apiClient.post('/auth/logout', {

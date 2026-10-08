@@ -56,6 +56,7 @@ class _TelehealthMeetingScreenState extends State<TelehealthMeetingScreen> {
 
   void _enterRoom() {
     setState(() => _inLobby = false);
+    _meetingRepo.joinAsDoctor(widget.bookingId);
     _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() => _sessionSecondsElapsed++);

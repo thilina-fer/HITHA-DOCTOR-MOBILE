@@ -1,3 +1,4 @@
+import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 import '../services/sample_data.dart';
@@ -13,9 +14,9 @@ class WalletRepository {
       if (res is Map<String, dynamic>) {
         return WalletSummary.fromJson(res);
       }
-      return SampleData.walletSummary;
+      return AppConfig.demoMode ? SampleData.walletSummary : const WalletSummary();
     } catch (_) {
-      return SampleData.walletSummary;
+      return AppConfig.demoMode ? SampleData.walletSummary : const WalletSummary();
     }
   }
 
@@ -34,12 +35,12 @@ class WalletRepository {
   Future<List<PayoutMethod>> getPayoutMethods() async {
     try {
       final res = await _apiClient.get('/doctor/wallet/payout-methods');
-      if (res is List && res.isNotEmpty) {
+      if (res is List) {
         return res.map((e) => PayoutMethod.fromJson(e as Map<String, dynamic>)).toList();
       }
-      return _defaultPayoutMethods;
+      return AppConfig.demoMode ? _defaultPayoutMethods : [];
     } catch (_) {
-      return _defaultPayoutMethods;
+      return AppConfig.demoMode ? _defaultPayoutMethods : [];
     }
   }
 
@@ -95,12 +96,9 @@ class WalletRepository {
       } else if (res is List) {
         rawList = res;
       }
-      if (rawList.isNotEmpty) {
-        return rawList.map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>)).toList();
-      }
-      return _sampleTransactions;
+      return rawList.map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return _sampleTransactions;
+      return AppConfig.demoMode ? _sampleTransactions : [];
     }
   }
 

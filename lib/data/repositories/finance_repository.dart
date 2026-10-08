@@ -1,3 +1,4 @@
+import '../../config/app_config.dart';
 import '../services/api_client.dart';
 
 class DoctorFinanceSummary {
@@ -31,14 +32,14 @@ class DoctorFinanceSummary {
     return DoctorFinanceSummary(
       todayGrossLkr: (json['todayGrossEarningsLkr'] as num?)?.toDouble() ?? 0.0,
       todayNetLkr: (json['todayNetEarningsLkr'] as num?)?.toDouble() ?? 0.0,
-      totalGrossLkr: (json['totalGrossEarningsLkr'] as num?)?.toDouble() ?? 125000.0,
-      totalNetLkr: (json['totalNetEarningsLkr'] as num?)?.toDouble() ?? 106250.0,
-      totalCommissionLkr: (json['totalCommissionDeductedLkr'] as num?)?.toDouble() ?? 18750.0,
-      balanceEscrowLkr: (json['balanceEscrowLkr'] as num?)?.toDouble() ?? 10000.0,
-      balanceAvailableLkr: (json['balanceAvailableLkr'] as num?)?.toDouble() ?? 63000.0,
-      totalWithdrawnLkr: (json['totalWithdrawnLkr'] as num?)?.toDouble() ?? 33250.0,
-      totalConsultationsCount: (json['totalConsultationsCount'] as num?)?.toInt() ?? 25,
-      todayConsultationsCount: (json['todayConsultationsCount'] as num?)?.toInt() ?? 2,
+      totalGrossLkr: (json['totalGrossEarningsLkr'] as num?)?.toDouble() ?? 0.0,
+      totalNetLkr: (json['totalNetEarningsLkr'] as num?)?.toDouble() ?? 0.0,
+      totalCommissionLkr: (json['totalCommissionDeductedLkr'] as num?)?.toDouble() ?? 0.0,
+      balanceEscrowLkr: (json['balanceEscrowLkr'] as num?)?.toDouble() ?? 0.0,
+      balanceAvailableLkr: (json['balanceAvailableLkr'] as num?)?.toDouble() ?? 0.0,
+      totalWithdrawnLkr: (json['totalWithdrawnLkr'] as num?)?.toDouble() ?? 0.0,
+      totalConsultationsCount: (json['totalConsultationsCount'] as num?)?.toInt() ?? 0,
+      todayConsultationsCount: (json['todayConsultationsCount'] as num?)?.toInt() ?? 0,
       activeCommissionPercent: (json['activeCommissionRatePercent'] as num?)?.toDouble() ?? 15.0,
     );
   }
@@ -49,39 +50,29 @@ class FinanceRepository {
 
   final ApiClient _apiClient;
 
+  static const _sampleSummary = DoctorFinanceSummary(
+    todayGrossLkr: 10000.0,
+    todayNetLkr: 8500.0,
+    totalGrossLkr: 125000.0,
+    totalNetLkr: 106250.0,
+    totalCommissionLkr: 18750.0,
+    balanceEscrowLkr: 10000.0,
+    balanceAvailableLkr: 63000.0,
+    totalWithdrawnLkr: 33250.0,
+    totalConsultationsCount: 25,
+    todayConsultationsCount: 2,
+    activeCommissionPercent: 15.0,
+  );
+
   Future<DoctorFinanceSummary> getSummary() async {
     try {
       final res = await _apiClient.get('/doctor/finance/summary');
       if (res is Map<String, dynamic>) {
         return DoctorFinanceSummary.fromJson(res);
       }
-      return const DoctorFinanceSummary(
-        todayGrossLkr: 10000.0,
-        todayNetLkr: 8500.0,
-        totalGrossLkr: 125000.0,
-        totalNetLkr: 106250.0,
-        totalCommissionLkr: 18750.0,
-        balanceEscrowLkr: 10000.0,
-        balanceAvailableLkr: 63000.0,
-        totalWithdrawnLkr: 33250.0,
-        totalConsultationsCount: 25,
-        todayConsultationsCount: 2,
-        activeCommissionPercent: 15.0,
-      );
+      return AppConfig.demoMode ? _sampleSummary : const DoctorFinanceSummary();
     } catch (_) {
-      return const DoctorFinanceSummary(
-        todayGrossLkr: 10000.0,
-        todayNetLkr: 8500.0,
-        totalGrossLkr: 125000.0,
-        totalNetLkr: 106250.0,
-        totalCommissionLkr: 18750.0,
-        balanceEscrowLkr: 10000.0,
-        balanceAvailableLkr: 63000.0,
-        totalWithdrawnLkr: 33250.0,
-        totalConsultationsCount: 25,
-        todayConsultationsCount: 2,
-        activeCommissionPercent: 15.0,
-      );
+      return AppConfig.demoMode ? _sampleSummary : const DoctorFinanceSummary();
     }
   }
 }

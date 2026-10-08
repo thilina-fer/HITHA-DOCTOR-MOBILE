@@ -1,3 +1,4 @@
+import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 
@@ -15,12 +16,9 @@ class BlogsRepository {
       } else if (res is List) {
         rawList = res;
       }
-      if (rawList.isNotEmpty) {
-        return rawList.map((e) => ArticleItem.fromJson(e as Map<String, dynamic>)).toList();
-      }
-      return _sampleArticles;
+      return rawList.map((e) => ArticleItem.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return _sampleArticles;
+      return AppConfig.demoMode ? _sampleArticles : [];
     }
   }
 

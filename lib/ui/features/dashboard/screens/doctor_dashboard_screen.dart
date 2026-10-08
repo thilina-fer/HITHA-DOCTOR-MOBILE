@@ -422,23 +422,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     final bookings = dashVm.todayBookings;
     final BookingItem? nextSession = bookings.isNotEmpty ? bookings.first : null;
 
-    final sessionDate = nextSession?.scheduledStartTime ?? DateTime.now();
-    final monthStr = DateFormat('MMM').format(sessionDate).toUpperCase();
-    final dayStr = DateFormat('dd').format(sessionDate);
-    final weekdayStr = DateFormat('EEE').format(sessionDate).toUpperCase();
-
-    final timeStartStr = nextSession != null
-        ? DateFormat('hh.mm a').format(nextSession.scheduledStartTime)
-        : '11.40 AM';
-    final timeEndStr = nextSession != null
-        ? DateFormat('hh.mm a').format(nextSession.scheduledEndTime)
-        : '12.25 PM';
-
-    final patientName = nextSession?.patientName ?? 'Anonymous Patient';
-    final refStr = nextSession != null ? 'REF : ${nextSession.bookingReference}' : 'REF : 123654';
-    final feeStr = nextSession != null ? nextSession.feeLkr.toStringAsFixed(2) : '5000.00';
-    final bookingId = nextSession?.id ?? '123654';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -477,201 +460,279 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         ),
         const SizedBox(height: 8),
 
-        // Next Session Card Container (Compact)
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x080D3B66),
-                blurRadius: 12,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left: Compact Date Box
-                  Container(
-                    width: 66,
-                    padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          monthStr,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          dayStr,
-                          style: const TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF0F172A),
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          weekdayStr,
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
-                    ),
+        if (nextSession == null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFEDF2F7), width: 1.0),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x080D3B66),
+                  blurRadius: 12,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 13),
-
-                  // Right: Session Details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Time + Green Status Pill
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.access_time, size: 12, color: Color(0xFF1E293B)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$timeStartStr - $timeEndStr',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1E293B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // Compact Green Indicator Pill
-                            Container(
-                              width: 28,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF00E676),
-                                borderRadius: BorderRadius.circular(6),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x4000E676),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-
-                        // Patient Name (Clean & Sleek)
-                        Text(
-                          patientName,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-
-                        // Ref
-                        Text(
-                          refStr,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF64748B),
-                            fontFamily: 'monospace',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-
-                        // Session Fee Label & Amount
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            const Text(
-                              'SESSION FEE: ',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF64748B),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            Text(
-                              feeStr,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  child: const Icon(Icons.event_available_outlined, size: 22, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'No Consultations Scheduled Today',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Compact JOIN NOW Button
-              SizedBox(
-                width: double.infinity,
-                height: 38,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.push(Routes.meetingPath(bookingId)),
-                  icon: const Icon(Icons.videocam_outlined, size: 16),
-                  label: const Text(
-                    'JOIN NOW',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Your calendar is clear. Patients can book upcoming available slots.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 34,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.go(Routes.availability),
+                    icon: const Icon(Icons.tune, size: 14, color: HithaColors.forest),
+                    label: const Text(
+                      'Manage Availability Slots',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: HithaColors.forest),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0C3854),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFCBD5E1)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          )
+        else
+          // Next Session Card Container (Compact)
+          Builder(
+            builder: (ctx) {
+              final sessionDate = nextSession.scheduledStartTime;
+              final monthStr = DateFormat('MMM').format(sessionDate).toUpperCase();
+              final dayStr = DateFormat('dd').format(sessionDate);
+              final weekdayStr = DateFormat('EEE').format(sessionDate).toUpperCase();
+
+              final timeStartStr = DateFormat('hh.mm a').format(nextSession.scheduledStartTime);
+              final timeEndStr = DateFormat('hh.mm a').format(nextSession.scheduledEndTime);
+
+              final patientName = nextSession.patientName;
+              final refStr = 'REF : ${nextSession.bookingReference}';
+              final feeStr = nextSession.feeLkr.toStringAsFixed(2);
+              final bookingId = nextSession.id;
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFEDF2F7), width: 1.0),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x080D3B66),
+                      blurRadius: 12,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left: Compact Date Box
+                        Container(
+                          width: 66,
+                          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                monthStr,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                dayStr,
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF0F172A),
+                                  height: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                weekdayStr,
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 13),
+
+                        // Right: Session Details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Time + Green Status Pill
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.access_time, size: 12, color: Color(0xFF1E293B)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '$timeStartStr - $timeEndStr',
+                                        style: const TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    width: 28,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF00E676),
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x4000E676),
+                                          blurRadius: 4,
+                                          offset: Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 5),
+
+                              // Patient Name
+                              Text(
+                                patientName,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: -0.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+
+                              // Ref
+                              Text(
+                                refStr,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF64748B),
+                                  fontFamily: 'monospace',
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+
+                              // Session Fee Label & Amount
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  const Text(
+                                    'SESSION FEE: ',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF64748B),
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  Text(
+                                    feeStr,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Compact JOIN NOW Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 38,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.push(Routes.meetingPath(bookingId)),
+                        icon: const Icon(Icons.videocam_outlined, size: 16),
+                        label: const Text(
+                          'JOIN NOW',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0C3854),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-        ),
       ],
     );
   }

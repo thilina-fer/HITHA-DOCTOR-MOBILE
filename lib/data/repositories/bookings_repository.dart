@@ -1,3 +1,4 @@
+import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 import '../services/sample_data.dart';
@@ -30,26 +31,19 @@ class BookingsRepository {
         rawList = res;
       }
 
-      if (rawList.isNotEmpty) {
-        return rawList
-            .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-
-      // Filter sample fallback data if matching status is given
-      if (status != null && status.isNotEmpty) {
-        return SampleData.todayBookings
-            .where((b) => b.status.value.toUpperCase() == status.toUpperCase())
-            .toList();
-      }
-      return SampleData.todayBookings;
+      return rawList
+          .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (_) {
-      if (status != null && status.isNotEmpty) {
-        return SampleData.todayBookings
-            .where((b) => b.status.value.toUpperCase() == status.toUpperCase())
-            .toList();
+      if (AppConfig.demoMode) {
+        if (status != null && status.isNotEmpty) {
+          return SampleData.todayBookings
+              .where((b) => b.status.value.toUpperCase() == status.toUpperCase())
+              .toList();
+        }
+        return SampleData.todayBookings;
       }
-      return SampleData.todayBookings;
+      return [];
     }
   }
 
@@ -59,20 +53,23 @@ class BookingsRepository {
       if (res is Map<String, dynamic>) {
         return BookingItem.fromJson(res);
       }
-      return SampleData.todayBookings.where((b) => b.id == id).firstOrNull;
+      return AppConfig.demoMode ? SampleData.todayBookings.where((b) => b.id == id).firstOrNull : null;
     } catch (_) {
-      return SampleData.todayBookings.where((b) => b.id == id).firstOrNull ??
-          BookingItem(
-            id: id,
-            bookingReference: 'HTH-BK${id.length > 4 ? id.substring(0, 4) : id}',
-            patientName: 'Anuki Samarasinghe',
-            patientPhone: '+94 77 123 4567',
-            scheduledStartTime: DateTime.now().add(const Duration(hours: 1)),
-            scheduledEndTime: DateTime.now().add(const Duration(hours: 1, minutes: 45)),
-            status: BookingStatus.CONFIRMED,
-            feeLkr: 5000.0,
-            sessionNotes: 'Follow-up consultation for cognitive behavioral assessment.',
-          );
+      if (AppConfig.demoMode) {
+        return SampleData.todayBookings.where((b) => b.id == id).firstOrNull ??
+            BookingItem(
+              id: id,
+              bookingReference: 'HTH-BK${id.length > 4 ? id.substring(0, 4) : id}',
+              patientName: 'Anuki Samarasinghe',
+              patientPhone: '+94 77 123 4567',
+              scheduledStartTime: DateTime.now().add(const Duration(hours: 1)),
+              scheduledEndTime: DateTime.now().add(const Duration(hours: 1, minutes: 45)),
+              status: BookingStatus.CONFIRMED,
+              feeLkr: 5000.0,
+              sessionNotes: 'Follow-up consultation for cognitive behavioral assessment.',
+            );
+      }
+      return null;
     }
   }
 }
