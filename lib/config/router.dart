@@ -101,18 +101,18 @@ GoRouter createRouter(AuthViewModel authVm) {
               badgeText: 'FLOW 12',
             ),
           ),
+          GoRoute(
+            path: Routes.profile,
+            builder: (context, state) => const PlaceholderScreen(
+              title: 'Practitioner Profile & Settings',
+              subtitle: 'Update bio, languages, qualifications, and notification preferences.',
+              badgeText: 'FLOW 06.1',
+            ),
+          ),
         ],
       ),
 
       // Standalone nested routes
-      GoRoute(
-        path: Routes.profile,
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Practitioner Profile & Settings',
-          subtitle: 'Update bio, languages, qualifications, and notification preferences.',
-          badgeText: 'FLOW 06.1',
-        ),
-      ),
       GoRoute(
         path: Routes.finance,
         builder: (context, state) => const PlaceholderScreen(

@@ -29,7 +29,7 @@ abstract final class HithaColors {
 
 abstract final class HithaSpacing {
   static const page = 16.0;
-  static const pageBottom = 80.0;
+  static const pageBottom = 104.0;
 }
 
 abstract final class HithaRadius {
