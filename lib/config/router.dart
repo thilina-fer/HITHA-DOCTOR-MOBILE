@@ -6,6 +6,7 @@ import '../ui/features/auth/screens/sign_in_screen.dart';
 import '../ui/features/auth/screens/verify_phone_screen.dart';
 import '../ui/features/auth/view_models/auth_view_model.dart';
 import '../ui/features/availability/screens/doctor_availability_screen.dart';
+import '../ui/features/bookings/screens/booking_details_screen.dart';
 import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
 import '../ui/features/common/placeholder_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
@@ -135,11 +136,7 @@ GoRouter createRouter(AuthViewModel authVm) {
         path: Routes.bookingDetails,
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
-          return PlaceholderScreen(
-            title: 'Consultation Dossier #$id',
-            subtitle: 'Patient contact info, past clinical notes, and session controls.',
-            badgeText: 'FLOW 09',
-          );
+          return BookingDetailsScreen(bookingId: id);
         },
       ),
       GoRoute(
