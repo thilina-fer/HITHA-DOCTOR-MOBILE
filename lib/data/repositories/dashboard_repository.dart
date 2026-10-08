@@ -1,4 +1,3 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 import '../services/sample_data.dart';
@@ -10,19 +9,20 @@ class DashboardRepository {
 
   Future<List<BookingItem>> getTodayBookings() async {
     try {
-      final res = await _apiClient.get('/doctors/bookings', query: {'status': 'ALL', 'page': '0', 'size': '10'});
+      final res = await _apiClient.get('/doctors/bookings', query: {'page': '0', 'size': '20'});
+      List rawList = [];
       if (res is Map<String, dynamic> && res['content'] is List) {
-        return (res['content'] as List)
+        rawList = res['content'] as List;
+      } else if (res is List) {
+        rawList = res;
+      }
+      if (rawList.isNotEmpty) {
+        return rawList
             .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
             .toList();
-      } else if (res is List) {
-        return res.map((e) => BookingItem.fromJson(e as Map<String, dynamic>)).toList();
       }
       return SampleData.todayBookings;
     } catch (e) {
-      if (AppConfig.demoMode) {
-        return SampleData.todayBookings;
-      }
       return SampleData.todayBookings;
     }
   }
@@ -41,8 +41,18 @@ class DashboardRepository {
 
   Future<List<AvailabilityWindow>> getAvailabilityWindows() async {
     try {
-      final res = await _apiClient.get('/doctors/availability');
-      if (res is List) {
+      final now = DateTime.now();
+      final s = now.subtract(const Duration(days: 7));
+      final e = now.add(const Duration(days: 21));
+      final startIso = "${s.year}-${s.month.toString().padLeft(2, '0')}-${s.day.toString().padLeft(2, '0')}";
+      final endIso = "${e.year}-${e.month.toString().padLeft(2, '0')}-${e.day.toString().padLeft(2, '0')}";
+
+      final res = await _apiClient.get('/doctors/availability', query: {
+        'startDate': startIso,
+        'endDate': endIso,
+      });
+
+      if (res is List && res.isNotEmpty) {
         return res.map((e) => AvailabilityWindow.fromJson(e as Map<String, dynamic>)).toList();
       }
       return SampleData.availabilityWindows;

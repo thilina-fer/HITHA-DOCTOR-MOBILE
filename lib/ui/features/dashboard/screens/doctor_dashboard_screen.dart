@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../config/routes.dart';
@@ -18,109 +19,15 @@ class DoctorDashboardScreen extends StatefulWidget {
 
 class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedDateIndex = 0; // Default to OCT 01 SUN (index 0) matching sketch
-
-  final List<Map<String, String>> _dateCards = const [
-    {'month': 'OCT', 'day': '01', 'weekday': 'SUN'},
-    {'month': 'OCT', 'day': '02', 'weekday': 'MON'},
-    {'month': 'OCT', 'day': '03', 'weekday': 'TUE'},
-    {'month': 'OCT', 'day': '04', 'weekday': 'WED'},
-    {'month': 'OCT', 'day': '05', 'weekday': 'THU'},
-    {'month': 'OCT', 'day': '06', 'weekday': 'FRI'},
-    {'month': 'OCT', 'day': '07', 'weekday': 'SAT'},
-  ];
-
-  late final Map<int, List<Map<String, dynamic>>> _slotData;
+  int _selectedDateIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _slotData = {
-      0: [
-        {
-          'time': '09:00 AM – 12:00 PM',
-          'label': 'Morning Telehealth',
-          'slots': '4 Sessions Max',
-          'active': true,
-        },
-        {
-          'time': '02:00 PM – 05:00 PM',
-          'label': 'Afternoon Consultations',
-          'slots': '4 Sessions Max',
-          'active': true,
-        },
-        {
-          'time': '06:30 PM – 09:00 PM',
-          'label': 'Evening Emergency Queue',
-          'slots': '3 Sessions Max',
-          'active': false,
-        },
-      ],
-      1: [
-        {
-          'time': '10:00 AM – 01:00 PM',
-          'label': 'Regular Telehealth',
-          'slots': '4 Sessions Max',
-          'active': true,
-        },
-        {
-          'time': '03:00 PM – 06:00 PM',
-          'label': 'Follow-up Consultations',
-          'slots': '4 Sessions Max',
-          'active': true,
-        },
-      ],
-      2: [
-        {
-          'time': '09:00 AM – 12:00 PM',
-          'label': 'Morning Telehealth',
-          'slots': '4 Sessions Max',
-          'active': true,
-        },
-        {
-          'time': '01:30 PM – 04:30 PM',
-          'label': 'Specialized CBT Care',
-          'slots': '3 Sessions Max',
-          'active': true,
-        },
-      ],
-      3: [
-        {
-          'time': '11:40 AM – 12:25 PM',
-          'label': 'Consultation Slot',
-          'slots': '1 Session Booked',
-          'active': true,
-        },
-        {
-          'time': '02:00 PM – 06:00 PM',
-          'label': 'Open Queue Availability',
-          'slots': '5 Sessions Max',
-          'active': true,
-        },
-      ],
-    };
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().loadDashboard();
     });
   }
-
-  List<Map<String, dynamic>> get _currentSlots =>
-      _slotData[_selectedDateIndex] ??
-      [
-        {
-          'time': '09:00 AM – 01:00 PM',
-          'label': 'General Telehealth',
-          'slots': '4 Sessions Max',
-          'active': true,
-        },
-        {
-          'time': '03:00 PM – 06:00 PM',
-          'label': 'Evening Consultations',
-          'slots': '3 Sessions Max',
-          'active': true,
-        },
-      ];
 
   void _showStatusPicker(BuildContext context, AuthViewModel authVm) {
     showModalBottomSheet(
@@ -207,7 +114,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  void _showNotificationsSheet(BuildContext context) {
+  void _showNotificationsSheet(BuildContext context, List<BookingItem> bookings) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -233,23 +140,28 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFDCFCE7),
-                    child: Icon(Icons.check, color: Color(0xFF16A34A), size: 18),
+                if (bookings.isNotEmpty) ...[
+                  ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: Color(0xFFDCFCE7),
+                      child: Icon(Icons.check, color: Color(0xFF16A34A), size: 18),
+                    ),
+                    title: const Text('Consultation Active', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                    subtitle: Text(
+                      '${bookings.first.patientName} (${bookings.first.bookingReference}) is ready for telehealth.',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    contentPadding: EdgeInsets.zero,
                   ),
-                  title: const Text('Consultation Confirmed', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  subtitle: const Text('Anonymous Patient (#123654) scheduled for 11:40 AM.', style: TextStyle(fontSize: 12)),
-                  contentPadding: EdgeInsets.zero,
-                ),
-                const Divider(),
+                  const Divider(),
+                ],
                 ListTile(
                   leading: const CircleAvatar(
                     backgroundColor: Color(0xFFEFF6FF),
                     child: Icon(Icons.account_balance_wallet, color: Color(0xFF2563EB), size: 18),
                   ),
-                  title: const Text('Escrow Cleared', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  subtitle: const Text('LKR 10,000 released to your available balance.', style: TextStyle(fontSize: 12)),
+                  title: const Text('Escrow Telemetry', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                  subtitle: const Text('Real-time earnings synced with Hitha Core Ledger.', style: TextStyle(fontSize: 12)),
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
@@ -275,7 +187,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         child: Column(
           children: [
             // 1. Top Custom App Bar
-            _buildTopAppBar(context, authVm, doctor),
+            _buildTopAppBar(context, authVm, dashVm, doctor),
 
             // 2. Scrollable Body
             Expanded(
@@ -298,7 +210,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Clean Greeting & Status Header (Leaves removed)
+                      // Clean Greeting & Status Header
                       _buildGreetingHeader(context, authVm, doctor),
                       const SizedBox(height: 18),
 
@@ -308,12 +220,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Section 1: Next Session Card (Matching Image 1)
-                      _buildNextSessionSection(context),
+                      // Section 1: Next Session Card (Real Data)
+                      _buildNextSessionSection(context, dashVm),
                       const SizedBox(height: 24),
 
-                      // Section 2: Availability Section (Matching Image 2)
-                      _buildAvailabilitySection(context),
+                      // Section 2: Availability Section (Real Data)
+                      _buildAvailabilitySection(context, dashVm),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -327,7 +239,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   }
 
   // --- Top App Bar ---
-  Widget _buildTopAppBar(BuildContext context, AuthViewModel authVm, DoctorProfile? doctor) {
+  Widget _buildTopAppBar(
+    BuildContext context,
+    AuthViewModel authVm,
+    DashboardViewModel dashVm,
+    DoctorProfile? doctor,
+  ) {
     return Container(
       color: Colors.transparent,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -380,7 +297,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
           // Notification Bell with Red Badge
           GestureDetector(
-            onTap: () => _showNotificationsSheet(context),
+            onTap: () => _showNotificationsSheet(context, dashVm.todayBookings),
             child: Stack(
               children: [
                 const Padding(
@@ -425,7 +342,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Clean Greeting & Status Header (Leaves Removed) ---
+  // --- Clean Greeting & Status Header ---
   Widget _buildGreetingHeader(BuildContext context, AuthViewModel authVm, DoctorProfile? doctor) {
     final status = doctor?.status ?? DoctorStatus.ONLINE;
     final doctorName = (doctor != null && doctor.firstName.isNotEmpty)
@@ -516,8 +433,28 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Section 1: Next Session Card (Matching Image 1) ---
-  Widget _buildNextSessionSection(BuildContext context) {
+  // --- Section 1: Next Session Card (Real Backend Data) ---
+  Widget _buildNextSessionSection(BuildContext context, DashboardViewModel dashVm) {
+    final bookings = dashVm.todayBookings;
+    final BookingItem? nextSession = bookings.isNotEmpty ? bookings.first : null;
+
+    final sessionDate = nextSession?.scheduledStartTime ?? DateTime.now();
+    final monthStr = DateFormat('MMM').format(sessionDate).toUpperCase();
+    final dayStr = DateFormat('dd').format(sessionDate);
+    final weekdayStr = DateFormat('EEE').format(sessionDate).toUpperCase();
+
+    final timeStartStr = nextSession != null
+        ? DateFormat('hh.mm a').format(nextSession.scheduledStartTime)
+        : '11.40 AM';
+    final timeEndStr = nextSession != null
+        ? DateFormat('hh.mm a').format(nextSession.scheduledEndTime)
+        : '12.25 PM';
+
+    final patientName = nextSession?.patientName ?? 'Anonymous Patient';
+    final refStr = nextSession != null ? 'REF : ${nextSession.bookingReference}' : 'REF : 123654';
+    final feeStr = nextSession != null ? nextSession.feeLkr.toStringAsFixed(2) : '5000.00';
+    final bookingId = nextSession?.id ?? '123654';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -576,7 +513,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left: Grey Date Box (Matching Image 1)
+                  // Left: Grey Date Box (Real Date)
                   Container(
                     width: 88,
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
@@ -586,30 +523,30 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Text(
-                          'OCT',
-                          style: TextStyle(
+                          monthStr,
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
                             letterSpacing: 0.5,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          '07',
-                          style: TextStyle(
+                          dayStr,
+                          style: const TextStyle(
                             fontSize: 34,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
                             height: 1.1,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'WED',
-                          style: TextStyle(
+                          weekdayStr,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
@@ -631,12 +568,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
-                              children: const [
-                                Icon(Icons.access_time, size: 14, color: Color(0xFF1E293B)),
-                                SizedBox(width: 5),
+                              children: [
+                                const Icon(Icons.access_time, size: 14, color: Color(0xFF1E293B)),
+                                const SizedBox(width: 5),
                                 Text(
-                                  '11.40 AM - 12.25 PM',
-                                  style: TextStyle(
+                                  '$timeStartStr - $timeEndStr',
+                                  style: const TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
                                     color: Color(0xFF1E293B),
@@ -665,26 +602,30 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         const SizedBox(height: 6),
 
                         // Patient Name
-                        const Text(
-                          'Anonymous Patient',
-                          style: TextStyle(
+                        Text(
+                          patientName,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
                             letterSpacing: -0.3,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
 
                         // Ref
-                        const Text(
-                          'REF : 123654',
-                          style: TextStyle(
+                        Text(
+                          refStr,
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF64748B),
                             fontFamily: 'monospace',
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 6),
 
@@ -699,9 +640,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 1),
-                        const Text(
-                          '5000.00',
-                          style: TextStyle(
+                        Text(
+                          feeStr,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
@@ -719,7 +660,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => context.push(Routes.meetingPath('123654')),
+                  onPressed: () => context.push(Routes.meetingPath(bookingId)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0C3854),
                     foregroundColor: Colors.white,
@@ -745,8 +686,23 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Section 2: Availability Section (Matching Image 2) ---
-  Widget _buildAvailabilitySection(BuildContext context) {
+  // --- Section 2: Availability Section (Real Backend Windows) ---
+  Widget _buildAvailabilitySection(BuildContext context, DashboardViewModel dashVm) {
+    // Generate 7 consecutive days starting today
+    final now = DateTime.now();
+    final dynamicDates = List.generate(7, (i) => now.add(Duration(days: i)));
+    final selectedDate = dynamicDates[_selectedDateIndex < dynamicDates.length ? _selectedDateIndex : 0];
+
+    // Filter real availability windows from backend for the selected date
+    final daySlots = dashVm.availabilityWindows.where((w) {
+      if (w.startDateTime != null) {
+        return w.startDateTime!.year == selectedDate.year &&
+            w.startDateTime!.month == selectedDate.month &&
+            w.startDateTime!.day == selectedDate.day;
+      }
+      return w.dayOfWeek == selectedDate.weekday;
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -784,17 +740,20 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Horizontal Date Cards matching Image 2 sketch
+        // Dynamic 7-Day Horizontal Cards Row
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children: List.generate(_dateCards.length, (index) {
-              final card = _dateCards[index];
+            children: List.generate(dynamicDates.length, (index) {
+              final d = dynamicDates[index];
               final isSelected = _selectedDateIndex == index;
+              final monthStr = DateFormat('MMM').format(d).toUpperCase();
+              final dayStr = DateFormat('dd').format(d);
+              final weekdayStr = DateFormat('EEE').format(d).toUpperCase();
 
               return Padding(
-                padding: EdgeInsets.only(right: index == _dateCards.length - 1 ? 0 : 12),
+                padding: EdgeInsets.only(right: index == dynamicDates.length - 1 ? 0 : 12),
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
@@ -824,7 +783,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          card['month']!,
+                          monthStr,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -834,7 +793,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          card['day']!,
+                          dayStr,
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w900,
@@ -844,7 +803,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          card['weekday']!,
+                          weekdayStr,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -862,7 +821,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // "Time slots" Container matching Image 2 sketch
+        // "Time slots" Container
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -901,7 +860,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      '${_currentSlots.where((s) => s['active'] == true).length} Active',
+                      '${daySlots.length} Active Slots',
                       style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
@@ -914,72 +873,97 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               const SizedBox(height: 14),
 
               // Time slot rows
-              ...List.generate(_currentSlots.length, (slotIdx) {
-                final slot = _currentSlots[slotIdx];
-                final isActive = slot['active'] as bool;
-
-                return Container(
-                  margin: EdgeInsets.only(bottom: slotIdx == _currentSlots.length - 1 ? 0 : 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isActive ? const Color(0xFFF8FAFC) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isActive ? const Color(0xFFE2E8F0) : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                  child: Row(
+              if (daySlots.isEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  alignment: Alignment.center,
+                  child: Column(
                     children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: isActive ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
-                          shape: BoxShape.circle,
-                        ),
+                      Icon(Icons.event_available_outlined, size: 36, color: Colors.grey.shade400),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No time slots configured for ${DateFormat('EEE, MMM d').format(selectedDate)}',
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              slot['time'] as String,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
-                                color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${slot['label']} • ${slot['slots']}',
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                color: Color(0xFF64748B),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: isActive,
-                        activeThumbColor: HithaColors.forest,
-                        onChanged: (val) {
-                          setState(() {
-                            slot['active'] = val;
-                          });
-                          showHithaSnack(
-                            context,
-                            'Slot ${slot['time']} ${val ? "activated" : "paused"}',
-                          );
-                        },
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Tap below to configure recurring templates or open instant slots.',
+                        style: TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                );
-              }),
+                )
+              else
+                ...List.generate(daySlots.length, (slotIdx) {
+                  final slot = daySlots[slotIdx];
+                  final isBooked = slot.isBooked;
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: slotIdx == daySlots.length - 1 ? 0 : 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isBooked ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isBooked ? const Color(0xFFCBD5E1) : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isBooked ? const Color(0xFF3B82F6) : const Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${slot.startTime} – ${slot.endTime}',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: isBooked ? const Color(0xFF64748B) : const Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${isBooked ? "Booked Consultation" : "Available Slot"} • LKR ${slot.priceLkr.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isBooked ? const Color(0xFFEFF6FF) : const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            isBooked ? 'BOOKED' : 'OPEN',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: isBooked ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               const SizedBox(height: 14),
 
               // Manage & Add Time Slots button

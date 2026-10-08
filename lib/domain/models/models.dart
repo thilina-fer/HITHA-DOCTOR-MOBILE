@@ -254,18 +254,34 @@ class BookingItem {
   });
 
   factory BookingItem.fromJson(Map<String, dynamic> json) {
+    final rawId = '${json['bookingId'] ?? json['id'] ?? ''}';
+    final rawRef = json['bookingReference'] as String? ??
+        (rawId.length >= 8 ? rawId.substring(0, 8).toUpperCase() : 'HTH-BK');
+    final patient = json['patientName'] as String?;
+    final isAnon = json['appointmentForSomeoneElse'] == true ||
+        json['isAnonymous'] == true ||
+        patient == null ||
+        patient.trim().isEmpty;
+
+    final start = DateTime.tryParse(json['startTime'] as String? ?? json['scheduledStartTime'] as String? ?? '') ??
+        DateTime.now();
+    final end = DateTime.tryParse(json['endTime'] as String? ?? json['scheduledEndTime'] as String? ?? '') ??
+        start.add(const Duration(minutes: 45));
+
     return BookingItem(
-      id: '${json['id'] ?? ''}',
-      bookingReference: json['bookingReference'] as String? ?? 'HTH-BK',
-      patientName: json['patientName'] as String? ?? 'Client',
+      id: rawId,
+      bookingReference: rawRef,
+      patientName: isAnon ? 'Anonymous Patient' : patient,
       patientPhone: json['patientPhone'] as String?,
       patientAvatarUrl: json['patientAvatarUrl'] as String?,
-      isAnonymous: json['isAnonymous'] as bool? ?? false,
-      scheduledStartTime: DateTime.tryParse(json['scheduledStartTime'] as String? ?? '') ?? DateTime.now(),
-      scheduledEndTime: DateTime.tryParse(json['scheduledEndTime'] as String? ?? '') ??
-          DateTime.now().add(const Duration(minutes: 50)),
+      isAnonymous: isAnon,
+      scheduledStartTime: start,
+      scheduledEndTime: end,
       status: BookingStatus.fromString(json['status'] as String?),
-      feeLkr: (json['feeLkr'] as num?)?.toDouble() ?? 3500.0,
+      feeLkr: (json['totalPriceLkr'] as num?)?.toDouble() ??
+          (json['feeLkr'] as num?)?.toDouble() ??
+          (json['priceLkr'] as num?)?.toDouble() ??
+          5000.0,
       sessionNotes: json['sessionNotes'] as String?,
       meetingRoomName: json['meetingRoomName'] as String?,
     );
@@ -273,27 +289,66 @@ class BookingItem {
 }
 
 class AvailabilityWindow {
+  final String id;
+  final DateTime? startDateTime;
+  final DateTime? endDateTime;
   final int dayOfWeek; // 1 = Monday, 7 = Sunday
   final String dayName;
   final String startTime;
   final String endTime;
   final double priceLkr;
+  final bool isBooked;
 
   const AvailabilityWindow({
+    this.id = '',
+    this.startDateTime,
+    this.endDateTime,
     required this.dayOfWeek,
     required this.dayName,
     required this.startTime,
     required this.endTime,
     required this.priceLkr,
+    this.isBooked = false,
   });
 
   factory AvailabilityWindow.fromJson(Map<String, dynamic> json) {
+    DateTime? start;
+    DateTime? end;
+    if (json['startTime'] != null && json['startTime'].toString().contains('T')) {
+      start = DateTime.tryParse(json['startTime'] as String);
+    }
+    if (json['endTime'] != null && json['endTime'].toString().contains('T')) {
+      end = DateTime.tryParse(json['endTime'] as String);
+    }
+
+    final dayOfWeek = start != null ? start.weekday : (json['dayOfWeek'] as int? ?? 1);
+    final dayNames = const ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final dayName = json['dayName'] as String? ?? (dayOfWeek <= 7 ? dayNames[dayOfWeek] : 'Monday');
+
+    String startStr = json['startTime'] as String? ?? '09:00';
+    String endStr = json['endTime'] as String? ?? '17:00';
+
+    if (start != null) {
+      final hour = start.hour.toString().padLeft(2, '0');
+      final min = start.minute.toString().padLeft(2, '0');
+      startStr = '$hour:$min';
+    }
+    if (end != null) {
+      final hour = end.hour.toString().padLeft(2, '0');
+      final min = end.minute.toString().padLeft(2, '0');
+      endStr = '$hour:$min';
+    }
+
     return AvailabilityWindow(
-      dayOfWeek: json['dayOfWeek'] as int? ?? 1,
-      dayName: json['dayName'] as String? ?? 'Monday',
-      startTime: json['startTime'] as String? ?? '09:00',
-      endTime: json['endTime'] as String? ?? '17:00',
-      priceLkr: (json['priceLkr'] as num?)?.toDouble() ?? 3500.0,
+      id: '${json['id'] ?? ''}',
+      startDateTime: start,
+      endDateTime: end,
+      dayOfWeek: dayOfWeek,
+      dayName: dayName,
+      startTime: startStr,
+      endTime: endStr,
+      priceLkr: (json['priceLkr'] as num?)?.toDouble() ?? 5000.0,
+      isBooked: json['isBooked'] as bool? ?? false,
     );
   }
 }
