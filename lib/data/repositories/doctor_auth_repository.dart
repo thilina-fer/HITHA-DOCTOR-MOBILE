@@ -184,6 +184,46 @@ class DoctorAuthRepository {
     }
   }
 
+  Future<DoctorProfile> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? professionalBio,
+    List<String>? languages,
+    List<String>? qualifications,
+    List<String>? specialties,
+  }) async {
+    try {
+      final payload = <String, dynamic>{
+        if (firstName != null) 'firstName': firstName.trim(),
+        if (lastName != null) 'lastName': lastName.trim(),
+        if (professionalBio != null) 'professionalBio': professionalBio.trim(),
+      };
+      if (languages != null) payload['languages'] = languages;
+      if (qualifications != null) payload['qualifications'] = qualifications;
+      if (specialties != null) payload['specialties'] = specialties;
+      final res = await _apiClient.put('/doctors/me', payload);
+
+      if (res is Map<String, dynamic>) {
+        _cachedProfile = DoctorProfile.fromJson(res);
+        return _cachedProfile!;
+      }
+      return await getMe();
+    } catch (e) {
+      if (AppConfig.demoMode && _cachedProfile != null) {
+        _cachedProfile = _cachedProfile!.copyWith(
+          firstName: firstName,
+          lastName: lastName,
+          professionalBio: professionalBio,
+          languages: languages,
+          qualifications: qualifications,
+          specialties: specialties,
+        );
+        return _cachedProfile!;
+      }
+      rethrow;
+    }
+  }
+
   Future<void> updateOnlineStatus(DoctorStatus status) async {
     try {
       await _apiClient.patch('/doctors/status', {

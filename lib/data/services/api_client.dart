@@ -85,6 +85,9 @@ class ApiClient {
   Future<dynamic> post(String path, [Object? body]) =>
       _send(() => _client.post(_uri(path), headers: _headers, body: body == null ? null : jsonEncode(body)));
 
+  Future<dynamic> put(String path, Object body) =>
+      _send(() => _client.put(_uri(path), headers: _headers, body: jsonEncode(body)));
+
   Future<dynamic> patch(String path, Object body) =>
       _send(() => _client.patch(_uri(path), headers: _headers, body: jsonEncode(body)));
 
