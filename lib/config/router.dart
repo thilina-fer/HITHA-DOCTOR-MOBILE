@@ -6,6 +6,7 @@ import '../ui/features/auth/screens/sign_in_screen.dart';
 import '../ui/features/auth/screens/verify_phone_screen.dart';
 import '../ui/features/auth/view_models/auth_view_model.dart';
 import '../ui/features/availability/screens/doctor_availability_screen.dart';
+import '../ui/features/blogs/screens/doctor_blogs_screen.dart';
 import '../ui/features/bookings/screens/booking_details_screen.dart';
 import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
 import '../ui/features/common/placeholder_screen.dart';
@@ -110,11 +111,7 @@ GoRouter createRouter(AuthViewModel authVm) {
       ),
       GoRoute(
         path: Routes.blogs,
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'My Wellness Articles',
-          subtitle: 'Author psychoeducational articles for editorial approval and publication.',
-          badgeText: 'FLOW 06.4',
-        ),
+        builder: (context, state) => const DoctorBlogsScreen(),
       ),
       GoRoute(
         path: Routes.pricing,
