@@ -34,13 +34,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         final current = authVm.doctor?.status ?? DoctorStatus.ONLINE;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,19 +48,21 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Update Practitioner Status', style: HithaText.h3),
+                    Text('Practitioner Status', style: HithaText.h3.copyWith(fontSize: 16)),
                     IconButton(
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: const Icon(Icons.close, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
-                  'Your online availability controls patient queue routing and instant telehealth matching.',
-                  style: HithaText.bodySmall,
+                  'Your live status controls instant patient queue matching.',
+                  style: HithaText.caption,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 ...DoctorStatus.values.map((status) {
                   final isSelected = current == status;
                   Color dotColor;
@@ -81,21 +83,23 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   }
 
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
                     leading: Container(
-                      width: 12,
-                      height: 12,
+                      width: 9,
+                      height: 9,
                       decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
                     ),
                     title: Text(
                       status.label,
                       style: TextStyle(
+                        fontSize: 13,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected ? HithaColors.forest : HithaColors.ink,
                       ),
                     ),
                     trailing: isSelected
-                        ? const Icon(Icons.check_circle, color: HithaColors.forest, size: 20)
+                        ? const Icon(Icons.check_circle, color: HithaColors.forest, size: 18)
                         : null,
                     onTap: () async {
                       Navigator.pop(ctx);
@@ -119,12 +123,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,36 +136,42 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Notifications', style: HithaText.h3),
+                    Text('Notifications', style: HithaText.h3.copyWith(fontSize: 16)),
                     IconButton(
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: const Icon(Icons.close, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 if (bookings.isNotEmpty) ...[
                   ListTile(
+                    dense: true,
                     leading: const CircleAvatar(
+                      radius: 14,
                       backgroundColor: Color(0xFFDCFCE7),
-                      child: Icon(Icons.check, color: Color(0xFF16A34A), size: 18),
+                      child: Icon(Icons.check, color: Color(0xFF16A34A), size: 14),
                     ),
-                    title: const Text('Consultation Active', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                    title: const Text('Consultation Active', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                     subtitle: Text(
-                      '${bookings.first.patientName} (${bookings.first.bookingReference}) is ready for telehealth.',
-                      style: const TextStyle(fontSize: 12),
+                      '${bookings.first.patientName} (${bookings.first.bookingReference}) is confirmed.',
+                      style: const TextStyle(fontSize: 11),
                     ),
                     contentPadding: EdgeInsets.zero,
                   ),
                   const Divider(),
                 ],
                 ListTile(
+                  dense: true,
                   leading: const CircleAvatar(
+                    radius: 14,
                     backgroundColor: Color(0xFFEFF6FF),
-                    child: Icon(Icons.account_balance_wallet, color: Color(0xFF2563EB), size: 18),
+                    child: Icon(Icons.account_balance_wallet, color: Color(0xFF2563EB), size: 14),
                   ),
-                  title: const Text('Escrow Telemetry', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  subtitle: const Text('Real-time earnings synced with Hitha Core Ledger.', style: TextStyle(fontSize: 12)),
+                  title: const Text('Escrow Telemetry', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  subtitle: const Text('Real-time earnings synced with Hitha Core Ledger.', style: TextStyle(fontSize: 11)),
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
@@ -186,7 +196,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         bottom: false,
         child: Column(
           children: [
-            // 1. Top Custom App Bar
+            // 1. Top Custom App Bar (Minimal)
             _buildTopAppBar(context, authVm, dashVm, doctor),
 
             // 2. Scrollable Body
@@ -204,29 +214,29 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   padding: const EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    top: 10,
+                    top: 6,
                     bottom: HithaSpacing.pageBottom,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Clean Greeting & Status Header
+                      // Clean Minimal Greeting & Status Header
                       _buildGreetingHeader(context, authVm, doctor),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 14),
 
                       // SLMC Review Banner (if unverified or pending)
                       if (doctor != null && doctor.verificationStatus != VerificationStatus.ACTIVE) ...[
                         _buildVerificationBanner(doctor),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                       ],
 
-                      // Section 1: Next Session Card (Real Data)
+                      // Section 1: Next Session Card (Minimal & Compact)
                       _buildNextSessionSection(context, dashVm),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
-                      // Section 2: Availability Section (Real Data)
+                      // Section 2: Availability Section (Minimal & Compact)
                       _buildAvailabilitySection(context, dashVm),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -238,7 +248,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Top App Bar ---
+  // --- Top App Bar (Minimal) ---
   Widget _buildTopAppBar(
     BuildContext context,
     AuthViewModel authVm,
@@ -247,12 +257,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   ) {
     return Container(
       color: Colors.transparent,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
           // Hamburger Menu
           IconButton(
-            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1E293B), size: 26),
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1E293B), size: 23),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -264,8 +274,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const HithaLotus(size: 26, color: Color(0xFF0D9488)),
-              const SizedBox(width: 8),
+              const HithaLotus(size: 22, color: Color(0xFF0D9488)),
+              const SizedBox(width: 6),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -273,17 +283,17 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   Text(
                     'HITHA.LK',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w800,
-                      letterSpacing: 1.4,
+                      letterSpacing: 1.2,
                       color: Color(0xFF0F766E),
                     ),
                   ),
                   Text(
                     'peace of mind',
                     style: TextStyle(
-                      fontSize: 9,
-                      letterSpacing: 0.6,
+                      fontSize: 8.5,
+                      letterSpacing: 0.5,
                       color: Color(0xFF64748B),
                       fontWeight: FontWeight.w500,
                     ),
@@ -301,15 +311,15 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             child: Stack(
               children: [
                 const Padding(
-                  padding: EdgeInsets.all(4.0),
-                  child: Icon(Icons.notifications_none_rounded, color: Color(0xFF1E293B), size: 25),
+                  padding: EdgeInsets.all(3.0),
+                  child: Icon(Icons.notifications_none_rounded, color: Color(0xFF1E293B), size: 22),
                 ),
                 Positioned(
-                  top: 4,
-                  right: 4,
+                  top: 3,
+                  right: 3,
                   child: Container(
-                    width: 8,
-                    height: 8,
+                    width: 6,
+                    height: 6,
                     decoration: const BoxDecoration(
                       color: Color(0xFFEF4444),
                       shape: BoxShape.circle,
@@ -319,7 +329,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           // Doctor Avatar with Dropdown Arrow
           GestureDetector(
@@ -329,11 +339,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               children: [
                 HithaAvatar(
                   url: doctor?.profilePictureUrl,
-                  size: 34,
-                  radius: 17,
+                  size: 30,
+                  radius: 15,
                 ),
-                const SizedBox(width: 3),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF64748B)),
+                const SizedBox(width: 2),
+                const Icon(Icons.keyboard_arrow_down_rounded, size: 15, color: Color(0xFF64748B)),
               ],
             ),
           ),
@@ -342,7 +352,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Clean Greeting & Status Header ---
+  // --- Clean Minimal Greeting & Status Header ---
   Widget _buildGreetingHeader(BuildContext context, AuthViewModel authVm, DoctorProfile? doctor) {
     final status = doctor?.status ?? DoctorStatus.ONLINE;
     final doctorName = (doctor != null && doctor.firstName.isNotEmpty)
@@ -355,41 +365,41 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         const Text(
           'Good morning,',
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w400,
             color: Color(0xFF64748B),
           ),
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 2),
         Row(
           children: [
             Text(
               doctorName,
               style: const TextStyle(
-                fontSize: 26,
+                fontSize: 21,
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
+                letterSpacing: -0.3,
                 color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
 
-            // Interactive Status Pill Dropdown
+            // Minimal Status Pill Dropdown
             GestureDetector(
               onTap: () => _showStatusPicker(context, authVm),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F8F0),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFC6F0D9)),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFC6F0D9), width: 0.8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
                         color: status == DoctorStatus.ONLINE
                             ? const Color(0xFF10B981)
@@ -399,19 +409,19 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Text(
                       status.label,
                       style: const TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF065F46),
                       ),
                     ),
-                    const SizedBox(width: 3),
+                    const SizedBox(width: 2),
                     const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      size: 16,
+                      size: 14,
                       color: Color(0xFF065F46),
                     ),
                   ],
@@ -420,11 +430,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         const Text(
           'Welcome back to your digital sanctuary.',
           style: TextStyle(
-            fontSize: 13.5,
+            fontSize: 12,
             color: Color(0xFF64748B),
             fontWeight: FontWeight.w400,
           ),
@@ -433,7 +443,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Section 1: Next Session Card (Real Backend Data) ---
+  // --- Section 1: Next Session Card (Minimal & Compact) ---
   Widget _buildNextSessionSection(BuildContext context, DashboardViewModel dashVm) {
     final bookings = dashVm.todayBookings;
     final BookingItem? nextSession = bookings.isNotEmpty ? bookings.first : null;
@@ -465,7 +475,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             const Text(
               'Next Session',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
               ),
@@ -473,16 +483,16 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             GestureDetector(
               onTap: () => context.go(Routes.bookings),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: const Text(
                   'View All',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF0F172A),
                   ),
@@ -491,35 +501,35 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
 
-        // Next Session Card Container
+        // Next Session Card Container (Compact)
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.2),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.0),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0C0D3B66),
-                blurRadius: 18,
-                offset: Offset(0, 6),
+                color: Color(0x080D3B66),
+                blurRadius: 12,
+                offset: Offset(0, 3),
               ),
             ],
           ),
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           child: Column(
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left: Grey Date Box (Real Date)
+                  // Left: Compact Date Box
                   Container(
-                    width: 88,
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    width: 66,
+                    padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(13),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -527,36 +537,36 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         Text(
                           monthStr,
                           style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
                             color: Color(0xFF0F172A),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text(
                           dayStr,
                           style: const TextStyle(
-                            fontSize: 34,
+                            fontSize: 23,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
                             height: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text(
                           weekdayStr,
                           style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
                             color: Color(0xFF0F172A),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 13),
 
                   // Right: Session Details
                   Expanded(
@@ -569,57 +579,57 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.access_time, size: 14, color: Color(0xFF1E293B)),
-                                const SizedBox(width: 5),
+                                const Icon(Icons.access_time, size: 12, color: Color(0xFF1E293B)),
+                                const SizedBox(width: 4),
                                 Text(
                                   '$timeStartStr - $timeEndStr',
                                   style: const TextStyle(
-                                    fontSize: 12.5,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
                                     color: Color(0xFF1E293B),
                                   ),
                                 ),
                               ],
                             ),
-                            // Green Indicator Pill
+                            // Compact Green Indicator Pill
                             Container(
-                              width: 38,
-                              height: 12,
+                              width: 28,
+                              height: 8,
                               decoration: BoxDecoration(
                                 color: const Color(0xFF00E676),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(6),
                                 boxShadow: const [
                                   BoxShadow(
-                                    color: Color(0x6600E676),
-                                    blurRadius: 6,
-                                    offset: Offset(0, 2),
+                                    color: Color(0x4000E676),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 1),
                                   ),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 5),
 
-                        // Patient Name
+                        // Patient Name (Clean & Sleek)
                         Text(
                           patientName,
                           style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
                             color: Color(0xFF0F172A),
-                            letterSpacing: -0.3,
+                            letterSpacing: -0.2,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
 
                         // Ref
                         Text(
                           refStr,
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF64748B),
                             fontFamily: 'monospace',
@@ -627,54 +637,60 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
 
                         // Session Fee Label & Amount
-                        const Text(
-                          'SESSION FEE :',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF64748B),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          feeStr,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF0F172A),
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            const Text(
+                              'SESSION FEE: ',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF64748B),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            Text(
+                              feeStr,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Full width JOIN NOW Button
+              // Compact JOIN NOW Button
               SizedBox(
                 width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
+                height: 38,
+                child: ElevatedButton.icon(
                   onPressed: () => context.push(Routes.meetingPath(bookingId)),
+                  icon: const Icon(Icons.videocam_outlined, size: 16),
+                  label: const Text(
+                    'JOIN NOW',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0C3854),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'JOIN NOW',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -686,7 +702,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Section 2: Availability Section (Real Backend Windows) ---
+  // --- Section 2: Availability Section (Minimal & Compact) ---
   Widget _buildAvailabilitySection(BuildContext context, DashboardViewModel dashVm) {
     // Generate 7 consecutive days starting today
     final now = DateTime.now();
@@ -713,7 +729,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             const Text(
               'Availability',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
               ),
@@ -726,21 +742,21 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   Text(
                     'Configure',
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: HithaColors.forest,
                     ),
                   ),
-                  SizedBox(width: 4),
-                  Icon(Icons.tune_rounded, size: 16, color: HithaColors.forest),
+                  SizedBox(width: 3),
+                  Icon(Icons.tune_rounded, size: 14, color: HithaColors.forest),
                 ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-        // Dynamic 7-Day Horizontal Cards Row
+        // Dynamic 7-Day Compact Cards Row
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
@@ -753,7 +769,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               final weekdayStr = DateFormat('EEE').format(d).toUpperCase();
 
               return Padding(
-                padding: EdgeInsets.only(right: index == dynamicDates.length - 1 ? 0 : 12),
+                padding: EdgeInsets.only(right: index == dynamicDates.length - 1 ? 0 : 8),
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
@@ -761,21 +777,21 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                     });
                   },
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 76,
-                    height: 104,
+                    duration: const Duration(milliseconds: 180),
+                    width: 56,
+                    height: 74,
                     decoration: BoxDecoration(
                       color: isSelected ? HithaColors.forest : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(13),
                       border: Border.all(
                         color: isSelected ? HithaColors.forest : const Color(0xFFE2E8F0),
-                        width: isSelected ? 1.5 : 1.2,
+                        width: isSelected ? 1.4 : 1.0,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: isSelected ? const Color(0x280D3B66) : const Color(0x060D3B66),
-                          blurRadius: isSelected ? 12 : 6,
-                          offset: const Offset(0, 4),
+                          color: isSelected ? const Color(0x220D3B66) : const Color(0x040D3B66),
+                          blurRadius: isSelected ? 8 : 4,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -785,30 +801,30 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         Text(
                           monthStr,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w700,
                             color: isSelected ? const Color(0xFFD1FAE5) : const Color(0xFF64748B),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           dayStr,
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 18,
                             fontWeight: FontWeight.w900,
                             color: isSelected ? Colors.white : const Color(0xFF0F172A),
                             height: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           weekdayStr,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w800,
                             color: isSelected ? const Color(0xFFD1FAE5) : const Color(0xFF64748B),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ],
@@ -819,50 +835,50 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             }),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
-        // "Time slots" Container
+        // "Time slots" Container (Compact)
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.2),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFEDF2F7), width: 1.0),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0C0D3B66),
-                blurRadius: 18,
-                offset: Offset(0, 6),
+                color: Color(0x080D3B66),
+                blurRadius: 12,
+                offset: Offset(0, 3),
               ),
             ],
           ),
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
               Row(
                 children: [
-                  const Icon(Icons.access_time_rounded, color: Color(0xFF0D9488), size: 20),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.access_time_rounded, color: Color(0xFF0D9488), size: 16),
+                  const SizedBox(width: 6),
                   const Text(
                     'Time slots',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF0F172A),
                     ),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F8F0),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${daySlots.length} Active Slots',
                       style: const TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF065F46),
                       ),
@@ -870,26 +886,26 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
               // Time slot rows
               if (daySlots.isEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
                   alignment: Alignment.center,
                   child: Column(
                     children: [
-                      Icon(Icons.event_available_outlined, size: 36, color: Colors.grey.shade400),
-                      const SizedBox(height: 8),
+                      Icon(Icons.event_available_outlined, size: 28, color: Colors.grey.shade400),
+                      const SizedBox(height: 6),
                       Text(
                         'No time slots configured for ${DateFormat('EEE, MMM d').format(selectedDate)}',
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       const Text(
-                        'Tap below to configure recurring templates or open instant slots.',
-                        style: TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
+                        'Tap below to configure templates or open instant slots.',
+                        style: TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8)),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -901,26 +917,27 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   final isBooked = slot.isBooked;
 
                   return Container(
-                    margin: EdgeInsets.only(bottom: slotIdx == daySlots.length - 1 ? 0 : 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    margin: EdgeInsets.only(bottom: slotIdx == daySlots.length - 1 ? 0 : 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
                     decoration: BoxDecoration(
                       color: isBooked ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isBooked ? const Color(0xFFCBD5E1) : const Color(0xFFE2E8F0),
+                        width: 0.8,
                       ),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 8,
-                          height: 8,
+                          width: 6,
+                          height: 6,
                           decoration: BoxDecoration(
                             color: isBooked ? const Color(0xFF3B82F6) : const Color(0xFF10B981),
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -928,16 +945,16 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                               Text(
                                 '${slot.startTime} – ${slot.endTime}',
                                 style: TextStyle(
-                                  fontSize: 13.5,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w800,
                                   color: isBooked ? const Color(0xFF64748B) : const Color(0xFF0F172A),
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 1),
                               Text(
                                 '${isBooked ? "Booked Consultation" : "Available Slot"} • LKR ${slot.priceLkr.toStringAsFixed(0)}',
                                 style: const TextStyle(
-                                  fontSize: 11.5,
+                                  fontSize: 10.5,
                                   color: Color(0xFF64748B),
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -946,15 +963,15 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: isBooked ? const Color(0xFFEFF6FF) : const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             isBooked ? 'BOOKED' : 'OPEN',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w800,
                               color: isBooked ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
                             ),
@@ -964,29 +981,29 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                     ),
                   );
                 }),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
-              // Manage & Add Time Slots button
+              // Manage & Add Time Slots button (Compact)
               InkWell(
                 onTap: () => context.go(Routes.availability),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFBBF7D0), width: 0.8),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF0D9488)),
-                      SizedBox(width: 8),
+                      Icon(Icons.add_circle_outline_rounded, size: 15, color: Color(0xFF0D9488)),
+                      SizedBox(width: 6),
                       Text(
                         'Manage & Add Time Slots',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF0F766E),
                         ),
@@ -1007,14 +1024,14 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     return Container(
       decoration: BoxDecoration(
         color: HithaColors.creamDark,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: HithaColors.saffron.withValues(alpha: 0.35)),
       ),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          const Icon(Icons.verified_user_outlined, color: HithaColors.forest, size: 22),
-          const SizedBox(width: 12),
+          const Icon(Icons.verified_user_outlined, color: HithaColors.forest, size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1024,12 +1041,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   style: HithaText.bodyMedium.copyWith(
                     fontWeight: FontWeight.w700,
                     color: HithaColors.forest,
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
                 Text(
                   'Your profile dossier is under review by Hitha Medical Board.',
-                  style: HithaText.caption.copyWith(color: HithaColors.inkSoft),
+                  style: HithaText.caption.copyWith(fontSize: 10, color: HithaColors.inkSoft),
                 ),
               ],
             ),
@@ -1047,15 +1064,15 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(18),
               decoration: const BoxDecoration(
                 color: Color(0xFFF4F8F6),
                 border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
               ),
               child: Row(
                 children: [
-                  HithaAvatar(url: doctor?.profilePictureUrl, size: 48, radius: 24),
-                  const SizedBox(width: 14),
+                  HithaAvatar(url: doctor?.profilePictureUrl, size: 44, radius: 22),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1063,7 +1080,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         Text(
                           doctor?.fullName ?? 'Dr. Thilina',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF0F172A),
                           ),
@@ -1071,16 +1088,16 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         const SizedBox(height: 2),
                         Text(
                           doctor?.email ?? 'practitioner@hitha.lk',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           doctor?.slmcLicenseNumber.isNotEmpty == true
                               ? 'SLMC: ${doctor!.slmcLicenseNumber}'
                               : 'SLMC: SLMC-98765',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF0D9488),
                             fontFamily: 'monospace',
@@ -1093,40 +1110,45 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF0F766E)),
-              title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.w600)),
+              dense: true,
+              leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF0F766E), size: 20),
+              title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               onTap: () {
                 Navigator.pop(context);
                 context.go(Routes.dashboard);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.calendar_today_outlined, color: Color(0xFF0F766E)),
-              title: const Text('Availability & Schedule', style: TextStyle(fontWeight: FontWeight.w600)),
+              dense: true,
+              leading: const Icon(Icons.calendar_today_outlined, color: Color(0xFF0F766E), size: 20),
+              title: const Text('Availability & Schedule', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               onTap: () {
                 Navigator.pop(context);
                 context.go(Routes.availability);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.medical_services_outlined, color: Color(0xFF0F766E)),
-              title: const Text('Consultations Queue', style: TextStyle(fontWeight: FontWeight.w600)),
+              dense: true,
+              leading: const Icon(Icons.medical_services_outlined, color: Color(0xFF0F766E), size: 20),
+              title: const Text('Consultations Queue', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               onTap: () {
                 Navigator.pop(context);
                 context.go(Routes.bookings);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.account_balance_wallet_outlined, color: Color(0xFF0F766E)),
-              title: const Text('Wallet & Payouts', style: TextStyle(fontWeight: FontWeight.w600)),
+              dense: true,
+              leading: const Icon(Icons.account_balance_wallet_outlined, color: Color(0xFF0F766E), size: 20),
+              title: const Text('Wallet & Payouts', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               onTap: () {
                 Navigator.pop(context);
                 context.go(Routes.wallet);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.person_outline, color: Color(0xFF0F766E)),
-              title: const Text('Practitioner Profile', style: TextStyle(fontWeight: FontWeight.w600)),
+              dense: true,
+              leading: const Icon(Icons.person_outline, color: Color(0xFF0F766E), size: 20),
+              title: const Text('Practitioner Profile', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               onTap: () {
                 Navigator.pop(context);
                 context.go(Routes.profile);
@@ -1135,10 +1157,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             const Spacer(),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.logout, color: HithaColors.clay),
+              dense: true,
+              leading: const Icon(Icons.logout, color: HithaColors.clay, size: 20),
               title: const Text(
                 'Sign Out',
-                style: TextStyle(fontWeight: FontWeight.w700, color: HithaColors.clay),
+                style: TextStyle(fontWeight: FontWeight.w700, color: HithaColors.clay, fontSize: 13),
               ),
               onTap: () async {
                 Navigator.pop(context);
