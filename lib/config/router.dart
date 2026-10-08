@@ -6,6 +6,7 @@ import '../ui/features/auth/screens/sign_in_screen.dart';
 import '../ui/features/auth/screens/verify_phone_screen.dart';
 import '../ui/features/auth/view_models/auth_view_model.dart';
 import '../ui/features/availability/screens/doctor_availability_screen.dart';
+import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
 import '../ui/features/common/placeholder_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
 import '../ui/features/onboarding/screens/complete_profile_screen.dart';
@@ -84,11 +85,7 @@ GoRouter createRouter(AuthViewModel authVm) {
           ),
           GoRoute(
             path: Routes.bookings,
-            builder: (context, state) => const PlaceholderScreen(
-              title: 'Consultations Queue',
-              subtitle: 'Manage upcoming appointments, client dossier history, and session statuses.',
-              badgeText: 'FLOW 09',
-            ),
+            builder: (context, state) => const DoctorBookingsScreen(),
           ),
           GoRoute(
             path: Routes.wallet,
