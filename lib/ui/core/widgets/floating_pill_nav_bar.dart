@@ -30,9 +30,11 @@ class FloatingPillNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-        child: Center(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        heightFactor: 1.0,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Container(
