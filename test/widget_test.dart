@@ -1,30 +1,42 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:hitha_doctor_mobile/main.dart';
+import 'package:hitha_doctor_mobile/data/services/sample_data.dart';
+import 'package:hitha_doctor_mobile/domain/models/models.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('Sample doctor matches practitioner domain rules', () {
+    final doc = SampleData.doctor;
+    expect(doc.category, DoctorCategory.CLINICAL_PSYCHOLOGIST);
+    expect(doc.status, DoctorStatus.ONLINE);
+    expect(doc.verificationStatus, VerificationStatus.ACTIVE);
+    expect(doc.effectivePrice, 4500.0);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('Parses real backend /doctors/me payload seamlessly', () {
+    final raw = {
+      "id": "bca70d17-d43b-4a7c-9912-84c5df6bd404",
+      "firstName": "Thilina",
+      "lastName": "Dilshan Fernando",
+      "email": "dilshanthilina1010@gmail.com",
+      "phoneNumber": "0766497071",
+      "profilePicture": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=600",
+      "status": "ACTIVE",
+      "isProfileComplete": true,
+      "category": "CLINICAL_COUNSELOR",
+      "approvedCustomPriceLkr": 5000.00,
+      "basePriceLkr": 2500.00,
+      "sessionPriceLkr": 5000.00,
+      "ongoingSessionsCount": 0
+    };
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    final doc = DoctorProfile.fromJson(raw);
+    expect(doc.firstName, "Thilina");
+    expect(doc.lastName, "Dilshan Fernando");
+    expect(doc.fullName, "Dr. Thilina Dilshan Fernando");
+    expect(doc.category, DoctorCategory.CLINICAL_COUNSELOR);
+    expect(doc.status, DoctorStatus.ONLINE);
+    expect(doc.verificationStatus, VerificationStatus.ACTIVE);
+    expect(doc.profilePictureUrl, isNotNull);
+    expect(doc.profileComplete, true);
+    expect(doc.effectivePrice, 5000.0);
   });
 }
