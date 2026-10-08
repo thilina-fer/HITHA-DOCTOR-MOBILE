@@ -538,3 +538,257 @@ void showHithaSnack(BuildContext context, String message, {bool isError = false}
       ),
     );
 }
+
+/// Compact minimal action button (height 36-38dp)
+class HithaCompactButton extends StatelessWidget {
+  const HithaCompactButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.icon,
+    this.backgroundColor = const Color(0xFF0C3854),
+    this.foregroundColor = Colors.white,
+    this.isOutlined = false,
+  });
+
+  final String text;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final bool isOutlined;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isOutlined) {
+      return OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: backgroundColor,
+          side: BorderSide(color: backgroundColor.withValues(alpha: 0.3)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          minimumSize: const Size(0, 36),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[Icon(icon, size: 15), const SizedBox(width: 5)],
+            Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          ],
+        ),
+      );
+    }
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: foregroundColor,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        minimumSize: const Size(0, 36),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[Icon(icon, size: 15), const SizedBox(width: 5)],
+          Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Universal Status Badge with automated palette mapping
+class HithaStatusBadge extends StatelessWidget {
+  const HithaStatusBadge({
+    super.key,
+    required this.status,
+    this.label,
+  });
+
+  final String status;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    Color bg;
+    Color fg;
+    final normalized = status.toUpperCase();
+
+    if (normalized.contains('CONFIRM') || normalized.contains('ONLINE') || normalized.contains('ACTIVE') || normalized == 'OPEN') {
+      bg = const Color(0xFFDCFCE7);
+      fg = const Color(0xFF16A34A);
+    } else if (normalized.contains('COMPLETE')) {
+      bg = const Color(0xFFEFF6FF);
+      fg = const Color(0xFF2563EB);
+    } else if (normalized.contains('CANCEL') || normalized.contains('OFFLINE') || normalized.contains('REJECT')) {
+      bg = const Color(0xFFFEE2E2);
+      fg = const Color(0xFFDC2626);
+    } else if (normalized.contains('PEND') || normalized.contains('BUSY') || normalized.contains('BOOKED')) {
+      bg = const Color(0xFFFEF3C7);
+      fg = const Color(0xFFD97706);
+    } else {
+      bg = const Color(0xFFF1F5F9);
+      fg = const Color(0xFF64748B);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label ?? normalized,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+/// Stat Metric Card with minimal styling
+class HithaStatCard extends StatelessWidget {
+  const HithaStatCard({
+    super.key,
+    required this.title,
+    required this.value,
+    this.subtitle,
+    this.icon,
+    this.iconColor = HithaColors.forest,
+  });
+
+  final String title;
+  final String value;
+  final String? subtitle;
+  final IconData? icon;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEDF2F7)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x060D3B66),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF64748B),
+                  letterSpacing: 0.4,
+                ),
+              ),
+              if (icon != null)
+                Icon(icon, size: 16, color: iconColor),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.3,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Segmented Minimal Tab Switcher
+class HithaSegmentTab extends StatelessWidget {
+  const HithaSegmentTab({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onTabSelected,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: List.generate(tabs.length, (index) {
+          final isSelected = selectedIndex == index;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onTabSelected(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: isSelected
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x100D3B66),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ]
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  tabs[index],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? HithaColors.forest : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
