@@ -39,10 +39,84 @@ abstract final class HithaRadius {
   static const badge = 8.0;
 }
 
-/// Typography scale: Plus Jakarta Sans for UI text,
-/// JetBrains Mono for SLMC codes, prices and timestamps.
+/// Central typography manager for the entire Hitha application.
+/// All font family configurations and typography scales across the app
+/// are controlled strictly from this single location.
+abstract final class HithaTypography {
+  /// The single source-of-truth primary font family for the entire project.
+  static TextStyle font({
+    TextStyle? textStyle,
+    Color? color,
+    Color? backgroundColor,
+    double? fontSize,
+    FontWeight? fontWeight,
+    FontStyle? fontStyle,
+    double? letterSpacing,
+    double? wordSpacing,
+    TextBaseline? textBaseline,
+    double? height,
+    Locale? locale,
+    Paint? foreground,
+    Paint? background,
+    List<Shadow>? shadows,
+    List<FontFeature>? fontFeatures,
+    TextDecoration? decoration,
+    Color? decorationColor,
+    TextDecorationStyle? decorationStyle,
+    double? decorationThickness,
+  }) {
+    return GoogleFonts.roboto(
+      textStyle: textStyle,
+      color: color,
+      backgroundColor: backgroundColor,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
+      wordSpacing: wordSpacing,
+      textBaseline: textBaseline,
+      height: height,
+      locale: locale,
+      foreground: foreground,
+      background: background,
+      shadows: shadows,
+      fontFeatures: fontFeatures,
+      decoration: decoration,
+      decorationColor: decorationColor,
+      decorationStyle: decorationStyle,
+      decorationThickness: decorationThickness,
+    );
+  }
+
+  /// Global TextTheme using Roboto
+  static TextTheme textTheme([TextTheme? base]) => GoogleFonts.robotoTextTheme(base);
+
+  /// Primary font family name
+  static String? get fontFamily => GoogleFonts.roboto().fontFamily;
+
+  /// Monospace font configuration (for codes, reference IDs & telemetry)
+  static TextStyle mono({
+    TextStyle? textStyle,
+    Color? color,
+    double? fontSize,
+    FontWeight? fontWeight,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return GoogleFonts.robotoMono(
+      textStyle: textStyle,
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
+}
+
+/// Typography scale configured with Roboto via HithaTypography.
 abstract final class HithaText {
-  static TextStyle get _base => GoogleFonts.plusJakartaSans();
+  static TextStyle get _base => HithaTypography.font();
 
   static TextStyle get hero => _base.copyWith(
       fontSize: 32, fontWeight: FontWeight.w800, height: 1.15, letterSpacing: -0.68, color: HithaColors.forest);
@@ -60,7 +134,7 @@ abstract final class HithaText {
       _base.copyWith(fontSize: 12.5, fontWeight: FontWeight.w400, height: 1.45, color: HithaColors.inkSoft);
   static TextStyle get caption => _base.copyWith(
       fontSize: 11, fontWeight: FontWeight.w600, height: 1.4, letterSpacing: 0.5, color: HithaColors.inkFaint);
-  static TextStyle get mono => GoogleFonts.jetBrainsMono(
+  static TextStyle get mono => HithaTypography.mono(
       fontSize: 13, fontWeight: FontWeight.w700, height: 1.4, letterSpacing: 0.65, color: HithaColors.forest);
 }
 
@@ -91,9 +165,10 @@ ThemeData buildHithaTheme() {
   );
   return ThemeData(
     useMaterial3: true,
+    fontFamily: HithaTypography.fontFamily,
     colorScheme: scheme,
     scaffoldBackgroundColor: HithaColors.cream,
-    textTheme: GoogleFonts.plusJakartaSansTextTheme().apply(
+    textTheme: HithaTypography.textTheme().apply(
       bodyColor: HithaColors.inkSoft,
       displayColor: HithaColors.forest,
     ),
