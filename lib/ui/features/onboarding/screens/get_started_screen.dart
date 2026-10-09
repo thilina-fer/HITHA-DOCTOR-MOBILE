@@ -14,7 +14,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> with SingleTickerPr
   late final AnimationController _animController;
   late final PageController _pageController;
   int _currentPage = 0;
-  String _selectedLanguage = 'EN';
 
   final List<Map<String, String>> _onboardingSlides = const [
     {
@@ -40,7 +39,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> with SingleTickerPr
     _pageController = PageController();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 850),
     )..forward();
   }
 
@@ -49,86 +48,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> with SingleTickerPr
     _pageController.dispose();
     _animController.dispose();
     super.dispose();
-  }
-
-  void _showLanguageSelector() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Select Language',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildLanguageTile(ctx, 'EN', 'English'),
-                _buildLanguageTile(ctx, 'SI', 'සිංහල (Sinhala)'),
-                _buildLanguageTile(ctx, 'TA', 'தமிழ் (Tamil)'),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLanguageTile(BuildContext ctx, String code, String name) {
-    final isSelected = _selectedLanguage == code;
-    return InkWell(
-      onTap: () {
-        setState(() => _selectedLanguage = code);
-        Navigator.pop(ctx);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        margin: const EdgeInsets.only(bottom: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE8F6F0) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? const Color(0xFF045D51) : const Color(0xFF334155),
-              ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF045D51), size: 18),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -140,133 +59,89 @@ class _GetStartedScreenState extends State<GetStartedScreen> with SingleTickerPr
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar: Logo & Language Selector
+            // Top Bar: Centered Large Hitha Logo (Language pill removed as requested)
             FadeTransition(
               opacity: CurvedAnimation(
                 parent: _animController,
                 curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(width: 58), // Optical balance spacing
-                    // Centered Hitha Logo
-                    Hero(
-                      tag: 'hitha_brand_logo',
-                      child: Image.asset(
-                        'assets/images/hitha_logo.png',
-                        height: 68,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Text(
-                          'HITHA.LK',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                            color: Color(0xFF045D51),
-                          ),
+                padding: const EdgeInsets.only(top: 14, bottom: 4),
+                child: Center(
+                  child: Hero(
+                    tag: 'hitha_brand_logo',
+                    child: Image.asset(
+                      'assets/images/hitha_logo.png',
+                      height: 95,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Text(
+                        'HITHA.LK',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: Color(0xFF045D51),
                         ),
                       ),
                     ),
-                    // Language Selector Pill
-                    InkWell(
-                      onTap: _showLanguageSelector,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.language_rounded, size: 14, color: Color(0xFF64748B)),
-                            const SizedBox(width: 4),
-                            Text(
-                              _selectedLanguage,
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF334155),
-                              ),
-                            ),
-                            const SizedBox(width: 2),
-                            const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF64748B)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 10),
-
-            // Middle Section: Hero Doctor Illustration with botanical backdrop
+            // Middle Section: Centered Well-Proportioned Doctor Hero Illustration with Soft Gradient Aura
             Expanded(
               flex: 5,
               child: ScaleTransition(
-                scale: Tween<double>(begin: 0.90, end: 1.0).animate(
+                scale: Tween<double>(begin: 0.92, end: 1.0).animate(
                   CurvedAnimation(
                     parent: _animController,
-                    curve: const Interval(0.15, 0.65, curve: Curves.easeOutBack),
+                    curve: const Interval(0.12, 0.65, curve: Curves.easeOutBack),
                   ),
                 ),
                 child: FadeTransition(
                   opacity: CurvedAnimation(
                     parent: _animController,
-                    curve: const Interval(0.15, 0.6, curve: Curves.easeOut),
+                    curve: const Interval(0.12, 0.58, curve: Curves.easeOut),
                   ),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxHeight: screenSize.height * 0.44,
-                        maxWidth: 380,
+                        maxHeight: screenSize.height * 0.46,
+                        maxWidth: 390,
                       ),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Organic mint aura blob
+                          // Soft mint gradient aura circle
                           Container(
-                            width: 250,
-                            height: 250,
+                            width: 290,
+                            height: 290,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  Color(0xFFE2F4EC),
-                                  Color(0xFFEBF7F1),
+                                  Color(0xFFDCF2E7),
+                                  Color(0xFFEAF6F0),
                                   Color(0x00FFFFFF),
                                 ],
-                                stops: [0.3, 0.72, 1.0],
+                                stops: [0.35, 0.72, 1.0],
                               ),
                             ),
                           ),
 
-                          // Watercolor botanical foliage
+                          // Doctor Cutout Image (Nicely sized & centered without distracting leaves)
                           Positioned.fill(
-                            child: CustomPaint(
-                              painter: _BotanicalLeavesPainter(),
-                            ),
-                          ),
-
-                          // Doctor Cutout Image
-                          Positioned(
-                            bottom: 0,
-                            top: 8,
-                            child: Image.asset(
-                              'assets/images/Doctor.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, _, _) => const Icon(
-                                Icons.medical_services_rounded,
-                                size: 120,
-                                color: Color(0xFF045D51),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              child: Image.asset(
+                                'assets/images/Doctor.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, _, _) => const Icon(
+                                  Icons.medical_services_rounded,
+                                  size: 130,
+                                  color: Color(0xFF045D51),
+                                ),
                               ),
                             ),
                           ),
@@ -467,54 +342,4 @@ class _GetStartedScreenState extends State<GetStartedScreen> with SingleTickerPr
       ),
     );
   }
-}
-
-/// Custom painter for soft botanical sage-green leaves behind doctor illustration
-class _BotanicalLeavesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final leafPaint = Paint()
-      ..color = const Color(0xFFA5D1BC).withValues(alpha: 0.70)
-      ..style = PaintingStyle.fill;
-
-    final stemPaint = Paint()
-      ..color = const Color(0xFF86BAA1).withValues(alpha: 0.80)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-
-    // Stem path arching towards top-right
-    final stemPath = Path()
-      ..moveTo(size.width * 0.52, size.height * 0.88)
-      ..quadraticBezierTo(
-        size.width * 0.68,
-        size.height * 0.52,
-        size.width * 0.82,
-        size.height * 0.16,
-      );
-    canvas.drawPath(stemPath, stemPaint);
-
-    void drawLeaf(Offset center, double angle, double scale) {
-      canvas.save();
-      canvas.translate(center.dx, center.dy);
-      canvas.rotate(angle);
-      canvas.scale(scale);
-
-      final leafPath = Path()
-        ..moveTo(0, 0)
-        ..cubicTo(10, -18, 24, -22, 22, -42)
-        ..cubicTo(12, -34, 2, -18, 0, 0);
-
-      canvas.drawPath(leafPath, leafPaint);
-      canvas.restore();
-    }
-
-    drawLeaf(Offset(size.width * 0.82, size.height * 0.17), 0.25, 1.0);
-    drawLeaf(Offset(size.width * 0.75, size.height * 0.32), 0.65, 1.15);
-    drawLeaf(Offset(size.width * 0.68, size.height * 0.48), 0.85, 1.25);
-    drawLeaf(Offset(size.width * 0.62, size.height * 0.62), 1.05, 1.05);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -28,8 +28,5 @@ void main() {
     expect(find.text('Get Started'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Already have an account? '), findsOneWidget);
-
-    // Verify Language Pill
-    expect(find.text('EN'), findsOneWidget);
   });
 }
