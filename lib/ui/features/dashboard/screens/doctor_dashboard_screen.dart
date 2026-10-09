@@ -30,94 +30,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     });
   }
 
-  void _showStatusPicker(BuildContext context, AuthViewModel authVm) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        final current = authVm.doctor?.status ?? DoctorStatus.ONLINE;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Practitioner Status', style: HithaText.h3.copyWith(fontSize: 16)),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Your live status controls instant patient queue matching.',
-                  style: HithaText.caption,
-                ),
-                const SizedBox(height: 12),
-                ...DoctorStatus.values.map((status) {
-                  final isSelected = current == status;
-                  Color dotColor;
-                  switch (status) {
-                    case DoctorStatus.ONLINE:
-                      dotColor = HithaColors.moss;
-                      break;
-                    case DoctorStatus.BUSY:
-                      dotColor = HithaColors.saffron;
-                      break;
-                    case DoctorStatus.AWAY:
-                    case DoctorStatus.PAUSED:
-                      dotColor = HithaColors.slate400;
-                      break;
-                    case DoctorStatus.OFFLINE:
-                      dotColor = HithaColors.clay;
-                      break;
-                  }
-
-                  return ListTile(
-                    dense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-                    leading: Container(
-                      width: 9,
-                      height: 9,
-                      decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
-                    ),
-                    title: Text(
-                      status.label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? HithaColors.forest : HithaColors.ink,
-                      ),
-                    ),
-                    trailing: isSelected
-                        ? const Icon(Icons.check_circle, color: HithaColors.forest, size: 18)
-                        : null,
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      await authVm.updateOnlineStatus(status);
-                      if (context.mounted) {
-                        showHithaSnack(context, 'Status changed to ${status.label}');
-                      }
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   void _showNotificationsSheet(BuildContext context, List<BookingItem> bookings) {
     showModalBottomSheet(
@@ -223,21 +135,21 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                     children: [
                       // Dark Forest Green Greeting & Telemetry Banner
                       _buildGreetingHeader(context, authVm, dashVm, doctor),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 22),
 
                       // SLMC Review Banner (if unverified or pending)
                       if (doctor != null && doctor.verificationStatus != VerificationStatus.ACTIVE) ...[
                         _buildVerificationBanner(doctor),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 18),
                       ],
 
                       // Section 1: Next Session Card (Minimal & Compact)
                       _buildNextSessionSection(context, dashVm),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
                       // Section 2: Availability Section (Minimal & Compact)
                       _buildAvailabilitySection(context, dashVm, authVm),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -341,10 +253,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     return DoctorGreetingBanner(
       doctor: doctor,
       ongoingSessionsCount: ongoingCount,
-      onStatusChangeTap: () => _showStatusPicker(context, authVm),
       onOngoingSessionsTap: () => context.go(Routes.bookings),
       onEditProfileTap: () => context.go(Routes.profile),
-      onLogoutTap: () => _confirmSignOut(context, authVm),
     );
   }
 
@@ -424,7 +334,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         if (nextSession == null)
           Container(
@@ -756,7 +666,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         // Dynamic 7-Day Compact Cards Row
         SingleChildScrollView(
@@ -837,7 +747,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             }),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 15),
 
         // "Time slots" Container (Compact)
         Container(
@@ -1172,10 +1082,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               ),
               onTap: () async {
                 Navigator.pop(context);
-                await authVm.logout();
-                if (context.mounted) {
-                  context.go(Routes.login);
-                }
+                await _confirmSignOut(context, authVm);
               },
             ),
           ],
