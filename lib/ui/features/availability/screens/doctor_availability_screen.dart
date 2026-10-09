@@ -77,10 +77,85 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     }
   }
 
+  Future<bool> _showDeleteConfirmationDialog({
+    required String title,
+    required String message,
+    String confirmLabel = 'Delete',
+    Color confirmColor = const Color(0xFFDC2626),
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFEE2E2)),
+              ),
+              child: Icon(Icons.delete_outline_rounded, color: confirmColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF475569),
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF64748B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: confirmColor,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   Future<void> _saveWeeklyTemplates() async {
     if (_templates.isEmpty) {
-      showHithaSnack(context, 'Please add at least one weekly availability window.', isError: true);
-      return;
+      final confirmed = await _showDeleteConfirmationDialog(
+        title: 'Clear All Weekly Templates?',
+        message: 'You currently have no weekly availability windows configured. Saving this will clear all recurring consultation slots for patients. Are you sure you want to proceed?',
+        confirmLabel: 'Clear All',
+        confirmColor: const Color(0xFFDC2626),
+      );
+      if (!confirmed || !mounted) return;
     }
 
     for (final t in _templates) {
@@ -184,11 +259,110 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     });
   }
 
-  void _removeTemplateRow(int index) {
+  Future<void> _confirmAndRemoveTemplate(int index) async {
+    if (index < 0 || index >= _templates.length) return;
+    final item = _templates[index];
+
+    final confirmed = await _showDeleteConfirmationDialog(
+      title: 'Delete Availability Window?',
+      message: 'Are you sure you want to delete this weekly consultation window for ${item.dayName} (${_formatTimeDisplay(item.startTime)} – ${_formatTimeDisplay(item.endTime)})?\n\nThis will remove it from your schedule and save the change to the server so it will not reappear.',
+      confirmLabel: 'Delete Window',
+    );
+
+    if (!confirmed) return;
+
+    final updated = List<WeeklyTemplateItem>.from(_templates)..removeAt(index);
     setState(() {
-      _templates.removeAt(index);
+      _templates = updated;
+      _isSaving = true;
     });
+
+    try {
+      await _repo.saveWeeklyTemplates(updated, existingCustomSlots: _customSlots);
+      if (!mounted) return;
+      context.read<DashboardViewModel>().loadDashboard();
+      showHithaSnack(context, 'Availability window deleted and schedule updated successfully');
+      await _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      if (msg.contains('Pricing is not configured')) {
+        _showPricingNoticeDialog(msg);
+      } else {
+        showHithaSnack(context, 'Failed to update schedule on server: $msg', isError: true);
+      }
+      await _loadData();
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
+
+  Future<void> _confirmAndDeleteCustomSlot(CustomSlotItem slot) async {
+    final start = slot.startTime;
+    final end = slot.endTime;
+    final dateStr = '${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')} - ${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
+
+    final confirmed = await _showDeleteConfirmationDialog(
+      title: 'Delete Custom Slot?',
+      message: 'Are you sure you want to delete this custom slot for $dateStr ($timeStr)? Patients will no longer be able to book this slot.',
+      confirmLabel: 'Delete Slot',
+    );
+
+    if (!confirmed) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final remainingSlots = _customSlots.where((s) => s.id != slot.id).toList();
+      await _repo.deleteCustomSlot(slot.id, templates: _templates, remainingSlots: remainingSlots);
+      if (mounted) {
+        context.read<DashboardViewModel>().loadDashboard();
+        showHithaSnack(context, 'Custom slot deleted successfully');
+        await _loadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        showHithaSnack(context, 'Failed to delete custom slot: $msg', isError: true);
+        await _loadData();
+      }
+    }
+  }
+
+  Future<void> _confirmAndDeleteBlockedDate(BlockedDateItem block) async {
+    final start = block.startTime;
+    final dateStr = '${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}';
+    final reason = block.reason.isNotEmpty ? block.reason : 'Scheduled Leave';
+
+    final confirmed = await _showDeleteConfirmationDialog(
+      title: 'Remove Blocked Date?',
+      message: 'Are you sure you want to cancel the scheduled leave for $dateStr ($reason)? Consultations may become available again.',
+      confirmLabel: 'Remove Leave',
+      confirmColor: const Color(0xFFDC2626),
+    );
+
+    if (!confirmed) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _repo.deleteBlockedDate(block.id);
+      if (mounted) {
+        context.read<DashboardViewModel>().loadDashboard();
+        showHithaSnack(context, 'Blocked date removed successfully');
+        await _loadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        showHithaSnack(context, 'Failed to remove blocked date: $msg', isError: true);
+        await _loadData();
+      }
+    }
+  }
+
 
   void _loadStandardSchedule() {
     setState(() {
@@ -1418,7 +1592,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
 
                           // Delete Button
                           InkWell(
-                            onTap: () => _removeTemplateRow(index),
+                            onTap: _isSaving ? null : () => _confirmAndRemoveTemplate(index),
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
                               padding: const EdgeInsets.all(6),
@@ -1769,20 +1943,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
-                    onPressed: () async {
-                      try {
-                        await _repo.deleteCustomSlot(slot.id);
-                        if (mounted) {
-                          showHithaSnack(context, 'Custom slot deleted');
-                          _loadData();
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          final msg = e.toString().replaceFirst('Exception: ', '');
-                          showHithaSnack(context, 'Failed to delete slot: $msg', isError: true);
-                        }
-                      }
-                    },
+                    onPressed: () => _confirmAndDeleteCustomSlot(slot),
                   ),
                 ],
               ),
@@ -1893,20 +2054,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
-                    onPressed: () async {
-                      try {
-                        await _repo.deleteBlockedDate(block.id);
-                        if (mounted) {
-                          showHithaSnack(context, 'Blocked date removed');
-                          _loadData();
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          final msg = e.toString().replaceFirst('Exception: ', '');
-                          showHithaSnack(context, 'Failed to remove blocked date: $msg', isError: true);
-                        }
-                      }
-                    },
+                    onPressed: () => _confirmAndDeleteBlockedDate(block),
                   ),
                 ],
               ),

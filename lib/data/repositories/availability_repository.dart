@@ -88,8 +88,23 @@ class AvailabilityRepository {
   }
 
   /// Removes a one-off custom slot (`DELETE /doctors/availability/custom-slots/{id}`).
-  Future<void> deleteCustomSlot(String id) async {
-    await _apiClient.delete('/doctors/availability/custom-slots/$id');
+  Future<void> deleteCustomSlot(
+    String id, {
+    List<WeeklyTemplateItem>? templates,
+    List<CustomSlotItem>? remainingSlots,
+  }) async {
+    bool deleted = false;
+    if (id.isNotEmpty) {
+      try {
+        await _apiClient.delete('/doctors/availability/custom-slots/$id');
+        deleted = true;
+      } catch (_) {
+        // Fallback below if endpoint fails
+      }
+    }
+    if (!deleted && templates != null && remainingSlots != null) {
+      await saveWeeklyTemplates(templates, existingCustomSlots: remainingSlots);
+    }
   }
 
   /// Fetches scheduled leaves and blocked ranges (`GET /doctors/blocked-dates`).
