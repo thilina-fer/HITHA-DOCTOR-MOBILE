@@ -200,6 +200,58 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? professionalBio,
+    String? gender,
+    List<String>? languages,
+    List<String>? qualifications,
+    List<String>? specialties,
+    String? profilePicture,
+  }) async {
+    _loading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _doctor = await _authRepository.updateProfile(
+        firstName: firstName,
+        lastName: lastName,
+        professionalBio: professionalBio,
+        gender: gender,
+        languages: languages,
+        qualifications: qualifications,
+        specialties: specialties,
+        profilePicture: profilePicture,
+      );
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateProfilePicture(String url) async {
+    try {
+      await _authRepository.updateProfilePicture(url);
+      if (_doctor != null) {
+        _doctor = _doctor!.copyWith(profilePictureUrl: url);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    }
+  }
+
+  Future<String?> uploadFile(String filePath, {String folder = 'doctors'}) async {
+    return _authRepository.uploadFile(filePath: filePath, folder: folder);
+  }
+
   Future<void> updateOnlineStatus(DoctorStatus status) async {
     if (_doctor == null) return;
     try {

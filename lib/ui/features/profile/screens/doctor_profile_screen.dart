@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -59,133 +60,452 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     }
   }
 
+  Widget _buildAvatarFallback(DoctorProfile profile) {
+    final initials = '${profile.firstName.isNotEmpty ? profile.firstName[0] : 'D'}${profile.lastName.isNotEmpty ? profile.lastName[0] : 'R'}';
+    return Center(
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w900,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   void _showEditProfileSheet() {
     if (_profile == null) return;
     final firstNameController = TextEditingController(text: _profile!.firstName);
     final lastNameController = TextEditingController(text: _profile!.lastName);
     final bioController = TextEditingController(text: _profile!.professionalBio);
+    final qualController = TextEditingController();
+    final specController = TextEditingController();
+
+    String selectedGender = _profile!.gender.isNotEmpty ? _profile!.gender.toUpperCase() : 'MALE';
+    final Set<String> selectedLanguages = Set<String>.from(_profile!.languages);
+    final List<String> qualifications = List<String>.from(_profile!.qualifications);
+    final List<String> specialties = List<String>.from(_profile!.specialties);
+    String? currentProfilePicture = _profile!.profilePictureUrl;
+    bool isUploadingPhoto = false;
     bool isSaving = false;
+
+    Future<void> pickPhoto(StateSetter setSheetState) async {
+      final authVm = context.read<AuthViewModel>();
+      try {
+        final file = await FilePicker.pickFile(type: FileType.image);
+        if (file != null && file.path != null) {
+          final path = file.path!;
+          setSheetState(() => isUploadingPhoto = true);
+          final uploaded = await authVm.uploadFile(path, folder: 'doctors');
+          setSheetState(() {
+            isUploadingPhoto = false;
+            if (uploaded != null && uploaded.isNotEmpty) {
+              currentProfilePicture = uploaded;
+            }
+          });
+          if (uploaded == null || uploaded.isEmpty) {
+            if (mounted) showHithaSnack(context, 'Failed to upload photo.', isError: true);
+          }
+        }
+      } catch (e) {
+        setSheetState(() => isUploadingPhoto = false);
+        if (mounted) showHithaSnack(context, 'Error picking photo: $e', isError: true);
+      }
+    }
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
-            return Padding(
+            return Container(
+              height: MediaQuery.of(ctx).size.height * 0.88,
               padding: EdgeInsets.only(
                 left: 20,
                 right: 20,
-                top: 20,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                top: 16,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header bar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Edit Profile Details',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: HithaColors.forest,
-                        ),
+                      Row(
+                        children: const [
+                          Icon(Icons.edit_note_rounded, color: HithaColors.forest, size: 24),
+                          SizedBox(width: 8),
+                          Text(
+                            'Edit Practitioner Profile',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: HithaColors.forest,
+                            ),
+                          ),
+                        ],
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, size: 20),
+                        icon: const Icon(Icons.close_rounded, size: 22),
                         onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
+
+                  // Scrollable form fields
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        // Avatar & Photo Upload
+                        Center(
+                          child: Column(
+                            children: [
+                              Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(42),
+                                    child: Container(
+                                      width: 84,
+                                      height: 84,
+                                      color: const Color(0xFF0C3854),
+                                      child: isUploadingPhoto
+                                          ? const Center(
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            )
+                                          : (currentProfilePicture != null && currentProfilePicture!.isNotEmpty)
+                                              ? Image.network(
+                                                  currentProfilePicture!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, _, _) => _buildAvatarFallback(_profile!),
+                                                )
+                                              : _buildAvatarFallback(_profile!),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: isUploadingPhoto ? null : () => pickPhoto(setSheetState),
+                                      child: Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          color: HithaColors.forest,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2),
+                                        ),
+                                        child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              TextButton.icon(
+                                onPressed: isUploadingPhoto ? null : () => pickPhoto(setSheetState),
+                                icon: const Icon(Icons.photo_camera_back_outlined, size: 16, color: HithaColors.forest),
+                                label: Text(
+                                  isUploadingPhoto ? 'Uploading Photo...' : 'Change Profile Photo',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: HithaColors.forest),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // First Name & Last Name
+                        Row(
                           children: [
-                            const Text('FIRST NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                            const SizedBox(height: 6),
-                            TextField(
-                              controller: firstNameController,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xFFF8FAFC),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('FIRST NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                                  const SizedBox(height: 6),
+                                  TextField(
+                                    controller: firstNameController,
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: const Color(0xFFF8FAFC),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('LAST NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                                  const SizedBox(height: 6),
+                                  TextField(
+                                    controller: lastNameController,
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: const Color(0xFFF8FAFC),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 16),
+
+                        // Gender Selection
+                        const Text('GENDER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const SizedBox(height: 6),
+                        Row(
                           children: [
-                            const Text('LAST NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                            const SizedBox(height: 6),
-                            TextField(
-                              controller: lastNameController,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xFFF8FAFC),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                            for (final g in ['MALE', 'FEMALE', 'OTHER'])
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(
+                                    g == 'MALE' ? 'Male' : g == 'FEMALE' ? 'Female' : 'Other',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: selectedGender == g ? Colors.white : const Color(0xFF334155),
+                                    ),
+                                  ),
+                                  selected: selectedGender == g,
+                                  selectedColor: HithaColors.forest,
+                                  backgroundColor: const Color(0xFFF1F5F9),
+                                  showCheckmark: false,
+                                  onSelected: (val) {
+                                    if (val) setSheetState(() => selectedGender = g);
+                                  },
+                                ),
                               ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Languages Selection
+                        const Text('LANGUAGES SPOKEN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            for (final entry in {'si': 'Sinhala', 'en': 'English', 'ta': 'Tamil'}.entries)
+                              FilterChip(
+                                label: Text(
+                                  entry.value,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: selectedLanguages.contains(entry.key) ? Colors.white : const Color(0xFF334155),
+                                  ),
+                                ),
+                                selected: selectedLanguages.contains(entry.key),
+                                selectedColor: HithaColors.forest,
+                                backgroundColor: const Color(0xFFF1F5F9),
+                                showCheckmark: false,
+                                onSelected: (selected) {
+                                  setSheetState(() {
+                                    if (selected) {
+                                      selectedLanguages.add(entry.key);
+                                    } else if (selectedLanguages.length > 1) {
+                                      selectedLanguages.remove(entry.key);
+                                    }
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Qualifications / Degrees
+                        const Text('QUALIFICATIONS & DEGREES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const SizedBox(height: 6),
+                        if (qualifications.isNotEmpty)
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              for (final q in qualifications)
+                                Chip(
+                                  label: Text(q, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                                  backgroundColor: const Color(0xFFE2E8F0),
+                                  deleteIcon: const Icon(Icons.close, size: 14),
+                                  onDeleted: () {
+                                    setSheetState(() => qualifications.remove(q));
+                                  },
+                                ),
+                            ],
+                          ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: qualController,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  hintText: 'e.g. MBBS, MD, FRCP, MRCGP',
+                                  filled: true,
+                                  fillColor: const Color(0xFFF8FAFC),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                final text = qualController.text.trim();
+                                if (text.isNotEmpty && !qualifications.contains(text)) {
+                                  setSheetState(() {
+                                    qualifications.add(text);
+                                    qualController.clear();
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: HithaColors.forest,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              ),
+                              child: const Text('+ Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  const Text('PROFESSIONAL BIO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: bioController,
-                    maxLines: 4,
-                    style: const TextStyle(fontSize: 13),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      hintText: 'Enter clinical background, years of practice, and focus areas...',
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                        const SizedBox(height: 16),
+
+                        // Clinical Specialties
+                        const Text('CLINICAL SPECIALTIES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const SizedBox(height: 6),
+                        if (specialties.isNotEmpty)
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              for (final s in specialties)
+                                Chip(
+                                  label: Text(s, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                                  backgroundColor: const Color(0xFFDCFCE7),
+                                  deleteIcon: const Icon(Icons.close, size: 14),
+                                  onDeleted: () {
+                                    setSheetState(() => specialties.remove(s));
+                                  },
+                                ),
+                            ],
+                          ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: specController,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  hintText: 'e.g. Psychiatry, General Medicine, Pediatrics',
+                                  filled: true,
+                                  fillColor: const Color(0xFFF8FAFC),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                final text = specController.text.trim();
+                                if (text.isNotEmpty && !specialties.contains(text)) {
+                                  setSheetState(() {
+                                    specialties.add(text);
+                                    specController.clear();
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: HithaColors.forest,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              ),
+                              child: const Text('+ Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Professional Bio
+                        const Text('PROFESSIONAL BIO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: bioController,
+                          maxLines: 4,
+                          style: const TextStyle(fontSize: 13),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            hintText: 'Enter clinical background, years of practice, and focus areas...',
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+
+                  // Bottom Save Changes Action
                   PrimaryButton(
                     text: 'Save Changes',
                     loading: isSaving,
                     onPressed: () async {
                       setSheetState(() => isSaving = true);
-                      try {
-                        final updated = await _repo.updateProfile(
-                          firstName: firstNameController.text.trim(),
-                          lastName: lastNameController.text.trim(),
-                          professionalBio: bioController.text.trim(),
-                        );
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        if (mounted) {
-                          setState(() => _profile = updated);
-                          showHithaSnack(context, 'Profile updated successfully.');
-                        }
-                      } catch (_) {
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        if (mounted) showHithaSnack(context, 'Profile updated locally.');
+                      final authVm = ctx.read<AuthViewModel>();
+                      final navigator = Navigator.of(ctx);
+                      final success = await authVm.updateProfile(
+                        firstName: firstNameController.text.trim(),
+                        lastName: lastNameController.text.trim(),
+                        professionalBio: bioController.text.trim(),
+                        gender: selectedGender,
+                        languages: selectedLanguages.toList(),
+                        qualifications: qualifications,
+                        specialties: specialties,
+                        profilePicture: currentProfilePicture,
+                      );
+                      if (ctx.mounted) navigator.pop();
+                      if (!mounted) return;
+                      if (success) {
+                        await _loadProfile();
+                        if (!mounted) return;
+                        showHithaSnack(context, 'Profile updated successfully!');
+                      } else {
+                        showHithaSnack(context, authVm.errorMessage ?? 'Failed to update profile.', isError: true);
                       }
                     },
                   ),
@@ -316,25 +636,41 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         children: [
           Row(
             children: [
-              // Avatar
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0C3854),
-                  shape: BoxShape.circle,
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x15000000), blurRadius: 8, offset: Offset(0, 2)),
+              // Avatar with camera badge
+              GestureDetector(
+                onTap: _showEditProfileSheet,
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Container(
+                        width: 58,
+                        height: 58,
+                        color: const Color(0xFF0C3854),
+                        child: (profile.profilePictureUrl != null && profile.profilePictureUrl!.isNotEmpty)
+                            ? Image.network(
+                                profile.profilePictureUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => _buildAvatarFallback(profile),
+                              )
+                            : _buildAvatarFallback(profile),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: HithaColors.forest,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: const Icon(Icons.camera_alt, size: 10, color: Colors.white),
+                      ),
+                    ),
                   ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${profile.firstName.isNotEmpty ? profile.firstName[0] : 'D'}${profile.lastName.isNotEmpty ? profile.lastName[0] : 'R'}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -369,14 +705,22 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           label: 'SLMC VERIFIED',
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          profile.email,
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                        Expanded(
+                          child: Text(
+                            profile.email,
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_note_rounded, color: HithaColors.forest, size: 24),
+                tooltip: 'Edit Profile',
+                onPressed: _showEditProfileSheet,
               ),
             ],
           ),
@@ -437,9 +781,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
               ),
               HithaCompactButton(
-                text: 'Pricing Overrides',
+                text: 'Edit Details',
                 isOutlined: true,
-                onPressed: () => context.push('/doctor/pricing'),
+                onPressed: _showEditProfileSheet,
               ),
             ],
           ),
@@ -469,6 +813,58 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               const Text('/ 45 min session', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
             ],
           ),
+          if (profile.gender.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.person_outline_rounded, size: 16, color: HithaColors.forest),
+                const SizedBox(width: 8),
+                const Text('Gender: ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                Text(
+                  profile.gender.toUpperCase() == 'MALE'
+                      ? 'Male'
+                      : profile.gender.toUpperCase() == 'FEMALE'
+                          ? 'Female'
+                          : profile.gender,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                ),
+              ],
+            ),
+          ],
+          if (profile.qualifications.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text('QUALIFICATIONS & DEGREES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: profile.qualifications.map((q) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(q, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
+              )).toList(),
+            ),
+          ],
+          if (profile.specialties.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text('SPECIALTIES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: profile.specialties.map((s) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(s, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF065F46))),
+              )).toList(),
+            ),
+          ],
           const SizedBox(height: 12),
           const Text('LANGUAGES SPOKEN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
           const SizedBox(height: 6),

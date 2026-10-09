@@ -188,19 +188,23 @@ class DoctorAuthRepository {
     String? firstName,
     String? lastName,
     String? professionalBio,
+    String? gender,
     List<String>? languages,
     List<String>? qualifications,
     List<String>? specialties,
+    String? profilePicture,
   }) async {
     try {
       final payload = <String, dynamic>{
         if (firstName != null) 'firstName': firstName.trim(),
         if (lastName != null) 'lastName': lastName.trim(),
         if (professionalBio != null) 'professionalBio': professionalBio.trim(),
+        'gender': ?gender,
+        'profilePicture': ?profilePicture,
+        'languages': ?languages,
+        'qualifications': ?qualifications,
+        'specialties': ?specialties,
       };
-      if (languages != null) payload['languages'] = languages;
-      if (qualifications != null) payload['qualifications'] = qualifications;
-      if (specialties != null) payload['specialties'] = specialties;
       final res = await _apiClient.put('/doctors/me', payload);
 
       if (res is Map<String, dynamic>) {
@@ -214,9 +218,11 @@ class DoctorAuthRepository {
           firstName: firstName,
           lastName: lastName,
           professionalBio: professionalBio,
+          gender: gender,
           languages: languages,
           qualifications: qualifications,
           specialties: specialties,
+          profilePictureUrl: profilePicture,
         );
         return _cachedProfile!;
       }
