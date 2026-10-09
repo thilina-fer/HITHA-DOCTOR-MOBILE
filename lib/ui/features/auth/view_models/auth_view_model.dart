@@ -203,12 +203,16 @@ class AuthViewModel extends ChangeNotifier {
   Future<bool> updateProfile({
     String? firstName,
     String? lastName,
+    String? phoneNumber,
+    String? slmcLicenseNumber,
+    String? category,
     String? professionalBio,
     String? gender,
     List<String>? languages,
     List<String>? qualifications,
     List<String>? specialties,
     String? profilePicture,
+    double? basePriceLkr,
   }) async {
     _loading = true;
     _errorMessage = null;
@@ -217,12 +221,16 @@ class AuthViewModel extends ChangeNotifier {
       _doctor = await _authRepository.updateProfile(
         firstName: firstName,
         lastName: lastName,
+        phoneNumber: phoneNumber,
+        slmcLicenseNumber: slmcLicenseNumber,
+        category: category,
         professionalBio: professionalBio,
         gender: gender,
         languages: languages,
         qualifications: qualifications,
         specialties: specialties,
         profilePicture: profilePicture,
+        basePriceLkr: basePriceLkr,
       );
       return true;
     } catch (e) {

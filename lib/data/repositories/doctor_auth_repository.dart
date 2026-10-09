@@ -135,22 +135,30 @@ class DoctorAuthRepository {
   Future<DoctorProfile> updateProfile({
     String? firstName,
     String? lastName,
+    String? phoneNumber,
+    String? slmcLicenseNumber,
+    String? category,
     String? professionalBio,
     String? gender,
     List<String>? languages,
     List<String>? qualifications,
     List<String>? specialties,
     String? profilePicture,
+    double? basePriceLkr,
   }) async {
     final payload = <String, dynamic>{
       if (firstName != null) 'firstName': firstName.trim(),
       if (lastName != null) 'lastName': lastName.trim(),
+      if (phoneNumber != null && phoneNumber.trim().isNotEmpty) 'phoneNumber': phoneNumber.trim(),
+      if (slmcLicenseNumber != null && slmcLicenseNumber.trim().isNotEmpty) 'slmcLicenseNumber': slmcLicenseNumber.trim(),
+      if (category != null && category.trim().isNotEmpty) 'category': category.trim(),
       if (professionalBio != null) 'professionalBio': professionalBio.trim(),
       if (gender != null) 'gender': gender,
       if (profilePicture != null) 'profilePicture': profilePicture,
       if (languages != null) 'languages': languages,
       if (qualifications != null) 'qualifications': qualifications,
       if (specialties != null) 'specialties': specialties,
+      if (basePriceLkr != null) 'basePriceLkr': basePriceLkr,
     };
     final res = await _apiClient.put('/doctors/me', payload);
 

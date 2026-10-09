@@ -131,28 +131,45 @@ class DoctorProfile {
   String get fullName => 'Dr. $firstName $lastName'.trim();
   double get effectivePrice => approvedCustomPriceLkr ?? basePriceLkr;
 
+  static List<String> _parseStringList(dynamic val) {
+    if (val == null) return [];
+    if (val is List) {
+      return val.map((e) => '$e'.trim()).where((e) => e.isNotEmpty).toList();
+    }
+    if (val is String) {
+      if (val.trim().isEmpty) return [];
+      return val.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    }
+    return [];
+  }
+
   factory DoctorProfile.fromJson(Map<String, dynamic> json) {
     return DoctorProfile(
       id: '${json['id'] ?? ''}',
       firstName: json['firstName'] as String? ?? '',
       lastName: json['lastName'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      phoneNumber: json['phoneNumber'] as String? ?? '',
-      slmcLicenseNumber: json['slmcLicenseNumber'] as String? ?? '',
-      category: DoctorCategory.fromString(json['category'] as String?),
+      phoneNumber: json['phoneNumber'] as String? ?? json['phone'] as String? ?? json['mobile'] as String? ?? '',
+      slmcLicenseNumber: json['slmcLicenseNumber'] as String? ?? json['slmcNumber'] as String? ?? json['slmcRegNo'] as String? ?? json['licenseNumber'] as String? ?? '',
+      category: DoctorCategory.fromString(json['category'] as String? ?? json['doctorCategory'] as String? ?? json['clinicalCategory'] as String?),
       status: DoctorStatus.fromString(json['status'] as String?),
       verificationStatus: VerificationStatus.fromString(
         json['verificationStatus'] as String? ?? json['status'] as String?,
       ),
       profilePictureUrl: json['profilePictureUrl'] as String? ?? json['profilePicture'] as String?,
       certifiedDocumentUrl: json['certifiedDocumentUrl'] as String?,
-      professionalBio: json['professionalBio'] as String? ?? '',
+      professionalBio: json['professionalBio'] as String? ?? json['bio'] as String? ?? json['about'] as String? ?? json['description'] as String? ?? '',
       gender: json['gender'] as String? ?? 'MALE',
-      languages: (json['languages'] as List?)?.map((e) => '$e').toList() ?? ['en', 'si'],
-      qualifications: (json['qualifications'] as List?)?.map((e) => '$e').toList() ?? [],
-      specialties: (json['specialties'] as List?)?.map((e) => '$e').toList() ?? [],
+      languages: _parseStringList(json['languages'] ?? json['languagesSpoken']).isNotEmpty
+          ? _parseStringList(json['languages'] ?? json['languagesSpoken'])
+          : ['en', 'si'],
+      qualifications: _parseStringList(json['qualifications'] ?? json['degrees'] ?? json['education']),
+      specialties: _parseStringList(json['specialties'] ?? json['specializations'] ?? json['speciality']),
       profileComplete: json['profileComplete'] as bool? ?? json['isProfileComplete'] as bool? ?? false,
-      basePriceLkr: (json['basePriceLkr'] as num?)?.toDouble() ?? 3000.0,
+      basePriceLkr: (json['basePriceLkr'] as num?)?.toDouble() ??
+          (json['sessionPriceLkr'] as num?)?.toDouble() ??
+          (json['baseFee'] as num?)?.toDouble() ??
+          3000.0,
       approvedCustomPriceLkr: (json['approvedCustomPriceLkr'] as num?)?.toDouble(),
     );
   }

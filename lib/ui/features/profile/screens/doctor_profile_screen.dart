@@ -77,11 +77,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   void _showEditProfileSheet() {
     if (_profile == null) return;
     final firstNameController = TextEditingController(text: _profile!.firstName);
-    final lastNameController = TextEditingController(text: _profile!.lastName);
+    final lastNameController = TextEditingController(text: _profile!.phoneNumber.isNotEmpty && _profile!.lastName.isEmpty ? '' : _profile!.lastName);
+    final phoneController = TextEditingController(text: _profile!.phoneNumber);
+    final slmcController = TextEditingController(text: _profile!.slmcLicenseNumber);
     final bioController = TextEditingController(text: _profile!.professionalBio);
     final qualController = TextEditingController();
     final specController = TextEditingController();
 
+    DoctorCategory selectedCategory = _profile!.category;
     String selectedGender = _profile!.gender.isNotEmpty ? _profile!.gender.toUpperCase() : 'MALE';
     final Set<String> selectedLanguages = Set<String>.from(_profile!.languages);
     final List<String> qualifications = List<String>.from(_profile!.qualifications);
@@ -125,7 +128,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             return Container(
-              height: MediaQuery.of(ctx).size.height * 0.88,
+              height: MediaQuery.of(ctx).size.height * 0.90,
               padding: EdgeInsets.only(
                 left: 20,
                 right: 20,
@@ -134,7 +137,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               ),
               child: Column(
                 children: [
-                  // Header bar
+                  // Top drag bar & header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -223,17 +226,28 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
 
-                        // First Name & Last Name
+                        // Section 1: Basic Identity
+                        Row(
+                          children: const [
+                            Icon(Icons.person_outline_rounded, size: 16, color: HithaColors.forest),
+                            SizedBox(width: 6),
+                            Text(
+                              'PERSONAL DETAILS',
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF334155), letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('FIRST NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                                  const SizedBox(height: 6),
+                                  const Text('FIRST NAME', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                                  const SizedBox(height: 5),
                                   TextField(
                                     controller: firstNameController,
                                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -253,8 +267,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('LAST NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                                  const SizedBox(height: 6),
+                                  const Text('LAST NAME', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                                  const SizedBox(height: 5),
                                   TextField(
                                     controller: lastNameController,
                                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -271,10 +285,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
 
                         // Gender Selection
-                        const Text('GENDER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const Text('GENDER', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
                         const SizedBox(height: 6),
                         Row(
                           children: [
@@ -301,10 +315,206 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 18),
+
+                        // Section 2: Contact Information
+                        Row(
+                          children: const [
+                            Icon(Icons.contact_phone_outlined, size: 16, color: HithaColors.forest),
+                            SizedBox(width: 6),
+                            Text(
+                              'CONTACT INFORMATION',
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF334155), letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('PHONE NUMBER (MOBILE / WHATSAPP)', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                            const SizedBox(height: 5),
+                            TextField(
+                              controller: phoneController,
+                              keyboardType: TextInputType.phone,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              decoration: InputDecoration(
+                                hintText: 'e.g. 0771234567 or +94771234567',
+                                prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: HithaColors.forest),
+                                filled: true,
+                                fillColor: const Color(0xFFF8FAFC),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('REGISTERED EMAIL ADDRESS', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                            const SizedBox(height: 5),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.email_outlined, size: 18, color: Color(0xFF64748B)),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      _profile!.email.isNotEmpty ? _profile!.email : 'Not set',
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE2E8F0),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Icon(Icons.lock_outline_rounded, size: 11, color: Color(0xFF64748B)),
+                                        SizedBox(width: 4),
+                                        Text('Login ID', style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Section 3: Clinical & Accreditation Details
+                        Row(
+                          children: const [
+                            Icon(Icons.verified_user_outlined, size: 16, color: HithaColors.forest),
+                            SizedBox(width: 6),
+                            Text(
+                              'MEDICAL & CLINICAL ACCREDITATION',
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF334155), letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('SLMC REGISTRATION / LICENSE NO', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                            const SizedBox(height: 5),
+                            TextField(
+                              controller: slmcController,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              decoration: InputDecoration(
+                                hintText: 'e.g. SLMC-84920',
+                                prefixIcon: const Icon(Icons.badge_outlined, size: 18, color: HithaColors.forest),
+                                filled: true,
+                                fillColor: const Color(0xFFF8FAFC),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Clinical Category Dropdown
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('CLINICAL CATEGORY', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                            const SizedBox(height: 5),
+                            DropdownButtonFormField<DoctorCategory>(
+                              initialValue: selectedCategory,
+                              isExpanded: true,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: const Color(0xFFF8FAFC),
+                                prefixIcon: const Icon(Icons.medical_services_outlined, size: 18, color: HithaColors.forest),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              ),
+                              items: DoctorCategory.values.map((cat) {
+                                return DropdownMenuItem<DoctorCategory>(
+                                  value: cat,
+                                  child: Text(
+                                    '${cat.label} (Base: LKR ${cat.basePriceLkr.toStringAsFixed(0)})',
+                                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (cat) {
+                                if (cat != null) {
+                                  setSheetState(() => selectedCategory = cat);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Consultation Fee Info
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFBBF7D0)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.payments_outlined, size: 18, color: HithaColors.forest),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('CURRENT CONSULTATION FEE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF065F46))),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${formatLkr(_profile!.effectivePrice)} / 45 min session',
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: HithaColors.forest),
+                                    ),
+                                    if (_profile!.approvedCustomPriceLkr != null)
+                                      const Text(
+                                        'Includes approved custom pricing override.',
+                                        style: TextStyle(fontSize: 10.5, color: Color(0xFF15803D), fontWeight: FontWeight.w500),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Section 4: Practice Information
+                        Row(
+                          children: const [
+                            Icon(Icons.psychology_outlined, size: 16, color: HithaColors.forest),
+                            SizedBox(width: 6),
+                            Text(
+                              'PRACTICE & EXPERTISE',
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF334155), letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
 
                         // Languages Selection
-                        const Text('LANGUAGES SPOKEN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const Text('LANGUAGES SPOKEN', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 8,
@@ -338,7 +548,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         const SizedBox(height: 16),
 
                         // Qualifications / Degrees
-                        const Text('QUALIFICATIONS & DEGREES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const Text('QUALIFICATIONS & DEGREES', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
                         const SizedBox(height: 6),
                         if (qualifications.isNotEmpty)
                           Wrap(
@@ -399,7 +609,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         const SizedBox(height: 16),
 
                         // Clinical Specialties
-                        const Text('CLINICAL SPECIALTIES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        const Text('CLINICAL SPECIALTIES', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
                         const SizedBox(height: 6),
                         if (specialties.isNotEmpty)
                           Wrap(
@@ -459,9 +669,18 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Professional Bio
-                        const Text('PROFESSIONAL BIO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                        const SizedBox(height: 6),
+                        // Section 5: Professional Bio
+                        Row(
+                          children: const [
+                            Icon(Icons.notes_rounded, size: 16, color: HithaColors.forest),
+                            SizedBox(width: 6),
+                            Text(
+                              'PROFESSIONAL BIOGRAPHY',
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF334155), letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         TextField(
                           controller: bioController,
                           maxLines: 4,
@@ -469,7 +688,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
-                            hintText: 'Enter clinical background, years of practice, and focus areas...',
+                            hintText: 'Enter clinical background, years of practice, and therapeutic approach...',
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
@@ -491,6 +710,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                       final success = await authVm.updateProfile(
                         firstName: firstNameController.text.trim(),
                         lastName: lastNameController.text.trim(),
+                        phoneNumber: phoneController.text.trim(),
+                        slmcLicenseNumber: slmcController.text.trim(),
+                        category: selectedCategory.value,
                         professionalBio: bioController.text.trim(),
                         gender: selectedGender,
                         languages: selectedLanguages.toList(),
@@ -772,7 +994,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'MEDICAL ACCREDITATION',
+                'MEDICAL ACCREDITATION & CONTACT',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -794,7 +1016,54 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               const SizedBox(width: 8),
               const Text('SLMC Reg No: ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
               Text(
-                profile.slmcLicenseNumber.isNotEmpty ? profile.slmcLicenseNumber : 'SLMC-84920',
+                profile.slmcLicenseNumber.isNotEmpty ? profile.slmcLicenseNumber : 'Pending Entry',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: profile.slmcLicenseNumber.isNotEmpty ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.phone_android_rounded, size: 16, color: HithaColors.forest),
+              const SizedBox(width: 8),
+              const Text('Phone Number: ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+              Text(
+                profile.phoneNumber.isNotEmpty ? profile.phoneNumber : 'Not Provided',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: profile.phoneNumber.isNotEmpty ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.email_outlined, size: 16, color: HithaColors.forest),
+              const SizedBox(width: 8),
+              const Text('Registered Email: ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+              Expanded(
+                child: Text(
+                  profile.email.isNotEmpty ? profile.email : 'Not Provided',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.medical_services_outlined, size: 16, color: HithaColors.forest),
+              const SizedBox(width: 8),
+              const Text('Clinical Category: ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+              Text(
+                profile.category.label,
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
               ),
             ],
