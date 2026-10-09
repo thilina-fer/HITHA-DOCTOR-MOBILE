@@ -1,7 +1,5 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
-import '../services/sample_data.dart';
 
 class WalletRepository {
   WalletRepository(this._apiClient);
@@ -14,9 +12,9 @@ class WalletRepository {
       if (res is Map<String, dynamic>) {
         return WalletSummary.fromJson(res);
       }
-      return AppConfig.demoMode ? SampleData.walletSummary : const WalletSummary();
+      return const WalletSummary();
     } catch (_) {
-      return AppConfig.demoMode ? SampleData.walletSummary : const WalletSummary();
+      return const WalletSummary();
     }
   }
 
@@ -38,9 +36,9 @@ class WalletRepository {
       if (res is List) {
         return res.map((e) => PayoutMethod.fromJson(e as Map<String, dynamic>)).toList();
       }
-      return AppConfig.demoMode ? _defaultPayoutMethods : [];
+      return [];
     } catch (_) {
-      return AppConfig.demoMode ? _defaultPayoutMethods : [];
+      return [];
     }
   }
 
@@ -98,7 +96,7 @@ class WalletRepository {
       }
       return rawList.map((e) => WalletTransaction.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return AppConfig.demoMode ? _sampleTransactions : [];
+      return [];
     }
   }
 
@@ -110,51 +108,5 @@ class WalletRepository {
     BankInfo(code: '7214', name: 'People\'s Bank'),
     BankInfo(code: '7278', name: 'Sampath Bank'),
     BankInfo(code: '7287', name: 'Seylan Bank'),
-  ];
-
-  static final List<PayoutMethod> _defaultPayoutMethods = [
-    const PayoutMethod(
-      id: 'pm-1',
-      bankName: 'Commercial Bank of Ceylon',
-      accountNumber: '8004928172',
-      accountHolderName: 'Dr. Thilina Fernando',
-      branchName: 'Colombo 07',
-      isDefault: true,
-    ),
-  ];
-
-  static final List<WalletTransaction> _sampleTransactions = [
-    WalletTransaction(
-      id: 'tx-1',
-      description: 'Consultation Fee • Anuki Samarasinghe',
-      amountLkr: 4250.0,
-      type: 'CREDIT',
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-      status: 'COMPLETED',
-    ),
-    WalletTransaction(
-      id: 'tx-2',
-      description: 'CEFT Bank Payout to COMB 8004928172',
-      amountLkr: 15000.0,
-      type: 'DEBIT',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      status: 'COMPLETED',
-    ),
-    WalletTransaction(
-      id: 'tx-3',
-      description: 'Consultation Escrow Held • Kusal Mendis',
-      amountLkr: 4250.0,
-      type: 'ESCROW_HOLD',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      status: 'PENDING',
-    ),
-    WalletTransaction(
-      id: 'tx-4',
-      description: 'Consultation Fee • Nimna Perera',
-      amountLkr: 4250.0,
-      type: 'CREDIT',
-      createdAt: DateTime.now().subtract(const Duration(days: 4)),
-      status: 'COMPLETED',
-    ),
   ];
 }

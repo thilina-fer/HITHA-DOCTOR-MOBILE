@@ -60,8 +60,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
 
       if (mounted) {
         setState(() {
-          _templates = (config['templates'] as List<WeeklyTemplateItem>?) ??
-              AvailabilityRepository.defaultWeeklyTemplates();
+          _templates = (config['templates'] as List<WeeklyTemplateItem>?) ?? [];
           _customSlots = (config['customSlots'] as List<CustomSlotItem>?) ?? [];
           _blockedDates = blocked;
           _bookings = bookings;

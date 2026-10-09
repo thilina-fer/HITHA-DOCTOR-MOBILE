@@ -11,9 +11,9 @@ class MeetingRepository {
       if (res is Map<String, dynamic>) {
         return res;
       }
-      return {'token': 'simulated-livekit-token', 'roomName': 'room-$bookingId'};
+      return {};
     } catch (_) {
-      return {'token': 'simulated-livekit-token', 'roomName': 'room-$bookingId'};
+      return {};
     }
   }
 

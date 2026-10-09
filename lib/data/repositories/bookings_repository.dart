@@ -1,7 +1,5 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
-import '../services/sample_data.dart';
 
 class BookingsRepository {
   BookingsRepository(this._apiClient);
@@ -35,14 +33,6 @@ class BookingsRepository {
           .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (_) {
-      if (AppConfig.demoMode) {
-        if (status != null && status.isNotEmpty) {
-          return SampleData.todayBookings
-              .where((b) => b.status.value.toUpperCase() == status.toUpperCase())
-              .toList();
-        }
-        return SampleData.todayBookings;
-      }
       return [];
     }
   }
@@ -53,22 +43,8 @@ class BookingsRepository {
       if (res is Map<String, dynamic>) {
         return BookingItem.fromJson(res);
       }
-      return AppConfig.demoMode ? SampleData.todayBookings.where((b) => b.id == id).firstOrNull : null;
+      return null;
     } catch (_) {
-      if (AppConfig.demoMode) {
-        return SampleData.todayBookings.where((b) => b.id == id).firstOrNull ??
-            BookingItem(
-              id: id,
-              bookingReference: 'HTH-BK${id.length > 4 ? id.substring(0, 4) : id}',
-              patientName: 'Anuki Samarasinghe',
-              patientPhone: '+94 77 123 4567',
-              scheduledStartTime: DateTime.now().add(const Duration(hours: 1)),
-              scheduledEndTime: DateTime.now().add(const Duration(hours: 1, minutes: 45)),
-              status: BookingStatus.CONFIRMED,
-              feeLkr: 5000.0,
-              sessionNotes: 'Follow-up consultation for cognitive behavioral assessment.',
-            );
-      }
       return null;
     }
   }

@@ -35,24 +35,19 @@ class AvailabilityRepository {
         }
       }
 
-      // If templates is empty, provide standard initial default templates
-      final resolvedTemplates = templates.isNotEmpty
-          ? templates
-          : List<WeeklyTemplateItem>.from(defaultWeeklyTemplates());
-
-      resolvedTemplates.sort((a, b) {
+      templates.sort((a, b) {
         final dayCmp = a.dayOfWeek.compareTo(b.dayOfWeek);
         if (dayCmp != 0) return dayCmp;
         return a.startTime.compareTo(b.startTime);
       });
 
       return {
-        'templates': resolvedTemplates,
+        'templates': templates,
         'customSlots': customSlots,
       };
     } catch (_) {
       return {
-        'templates': defaultWeeklyTemplates(),
+        'templates': <WeeklyTemplateItem>[],
         'customSlots': <CustomSlotItem>[],
       };
     }

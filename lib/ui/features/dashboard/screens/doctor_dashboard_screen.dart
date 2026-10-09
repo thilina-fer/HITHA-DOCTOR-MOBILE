@@ -995,31 +995,33 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          doctor?.fullName ?? 'Dr. Thilina',
+                          doctor?.fullName.isNotEmpty == true ? doctor!.fullName : 'Doctor',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF0F172A),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          doctor?.email ?? 'practitioner@hitha.lk',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          doctor?.slmcLicenseNumber.isNotEmpty == true
-                              ? 'SLMC: ${doctor!.slmcLicenseNumber}'
-                              : 'SLMC: SLMC-98765',
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0D9488),
-                            fontFamily: 'monospace',
+                        if (doctor?.email.isNotEmpty == true) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            doctor!.email,
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
+                        ],
+                        if (doctor?.slmcLicenseNumber.isNotEmpty == true) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            'SLMC: ${doctor!.slmcLicenseNumber}',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0D9488),
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

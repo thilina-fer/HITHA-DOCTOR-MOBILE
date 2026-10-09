@@ -1,4 +1,3 @@
-import '../../config/app_config.dart';
 import '../services/api_client.dart';
 
 class DoctorFinanceSummary {
@@ -50,29 +49,15 @@ class FinanceRepository {
 
   final ApiClient _apiClient;
 
-  static const _sampleSummary = DoctorFinanceSummary(
-    todayGrossLkr: 10000.0,
-    todayNetLkr: 8500.0,
-    totalGrossLkr: 125000.0,
-    totalNetLkr: 106250.0,
-    totalCommissionLkr: 18750.0,
-    balanceEscrowLkr: 10000.0,
-    balanceAvailableLkr: 63000.0,
-    totalWithdrawnLkr: 33250.0,
-    totalConsultationsCount: 25,
-    todayConsultationsCount: 2,
-    activeCommissionPercent: 15.0,
-  );
-
   Future<DoctorFinanceSummary> getSummary() async {
     try {
       final res = await _apiClient.get('/doctor/finance/summary');
       if (res is Map<String, dynamic>) {
         return DoctorFinanceSummary.fromJson(res);
       }
-      return AppConfig.demoMode ? _sampleSummary : const DoctorFinanceSummary();
+      return const DoctorFinanceSummary();
     } catch (_) {
-      return AppConfig.demoMode ? _sampleSummary : const DoctorFinanceSummary();
+      return const DoctorFinanceSummary();
     }
   }
 }

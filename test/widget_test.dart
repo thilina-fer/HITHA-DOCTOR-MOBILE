@@ -1,10 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hitha_doctor_mobile/data/services/sample_data.dart';
 import 'package:hitha_doctor_mobile/domain/models/models.dart';
 
 void main() {
   test('Sample doctor matches practitioner domain rules', () {
-    final doc = SampleData.doctor;
+    const doc = DoctorProfile(
+      id: 'doc-001',
+      firstName: 'Kasun',
+      lastName: 'Perera',
+      email: 'kasun.perera@hitha.lk',
+      phoneNumber: '+94771234567',
+      slmcLicenseNumber: 'SLMC-98765',
+      category: DoctorCategory.CLINICAL_PSYCHOLOGIST,
+      status: DoctorStatus.ONLINE,
+      verificationStatus: VerificationStatus.ACTIVE,
+      basePriceLkr: 4000.0,
+      approvedCustomPriceLkr: 4500.0,
+    );
     expect(doc.category, DoctorCategory.CLINICAL_PSYCHOLOGIST);
     expect(doc.status, DoctorStatus.ONLINE);
     expect(doc.verificationStatus, VerificationStatus.ACTIVE);

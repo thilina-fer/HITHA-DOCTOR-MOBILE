@@ -1,7 +1,5 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
-import '../services/sample_data.dart';
 
 class DoctorAuthRepository {
   DoctorAuthRepository(this._apiClient);
@@ -16,27 +14,18 @@ class DoctorAuthRepository {
     required String identifier,
     required String password,
   }) async {
-    try {
-      final res = await _apiClient.post('/doctor/login', {
-        'identifier': identifier.trim(),
-        'password': password,
-      });
+    final res = await _apiClient.post('/doctor/login', {
+      'identifier': identifier.trim(),
+      'password': password,
+    });
 
-      if (res is Map<String, dynamic>) {
-        final accessToken = res['accessToken'] as String?;
-        final refreshToken = res['refreshToken'] as String?;
-        await _apiClient.setTokens(accessToken: accessToken, refreshToken: refreshToken);
-      }
-
-      return await getMe();
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        await _apiClient.setTokens(accessToken: 'demo-token', refreshToken: 'demo-refresh');
-        _cachedProfile = SampleData.doctor;
-        return SampleData.doctor;
-      }
-      rethrow;
+    if (res is Map<String, dynamic>) {
+      final accessToken = res['accessToken'] as String?;
+      final refreshToken = res['refreshToken'] as String?;
+      await _apiClient.setTokens(accessToken: accessToken, refreshToken: refreshToken);
     }
+
+    return await getMe();
   }
 
   Future<void> register({
@@ -50,66 +39,47 @@ class DoctorAuthRepository {
     String? profilePictureUrl,
     String? certifiedDocumentUrl,
   }) async {
-    try {
-      await _apiClient.post('/doctor/register', {
-        'firstName': firstName.trim(),
-        'lastName': lastName.trim(),
-        'email': email.trim().toLowerCase(),
-        'phoneNumber': phoneNumber.trim(),
-        'password': password,
-        'category': category.value,
-        'slmcLicenseNumber': slmcLicenseNumber.trim().toUpperCase(),
-        'profilePictureUrl': profilePictureUrl,
-        'certifiedDocumentUrl': certifiedDocumentUrl,
-      });
-    } catch (e) {
-      if (AppConfig.demoMode) return;
-      rethrow;
-    }
+    await _apiClient.post('/doctor/register', {
+      'firstName': firstName.trim(),
+      'lastName': lastName.trim(),
+      'email': email.trim().toLowerCase(),
+      'phoneNumber': phoneNumber.trim(),
+      'password': password,
+      'category': category.value,
+      'slmcLicenseNumber': slmcLicenseNumber.trim().toUpperCase(),
+      'profilePictureUrl': profilePictureUrl,
+      'certifiedDocumentUrl': certifiedDocumentUrl,
+    });
   }
 
   Future<void> sendOtp({
     required String identifier,
     required String purpose, // 'DOCTOR_LOGIN' | 'PASSWORD_RESET'
   }) async {
-    try {
-      await _apiClient.post('/auth/send-code', {
-        'identifier': identifier.trim(),
-        'purpose': purpose,
-      });
-    } catch (e) {
-      if (AppConfig.demoMode) return;
-      rethrow;
-    }
+    await _apiClient.post('/auth/send-code', {
+      'identifier': identifier.trim(),
+      'purpose': purpose,
+    });
   }
 
   Future<DoctorProfile> verifyOtp({
     required String identifier,
     required String code,
   }) async {
-    try {
-      final res = await _apiClient.post('/auth/verify-code', {
-        'identifier': identifier.trim(),
-        'verificationCode': code.trim(),
-      });
+    final res = await _apiClient.post('/auth/verify-code', {
+      'identifier': identifier.trim(),
+      'verificationCode': code.trim(),
+    });
 
-      if (res is Map<String, dynamic>) {
-        final accessToken = res['accessToken'] as String?;
-        final refreshToken = res['refreshToken'] as String?;
-        if (accessToken != null) {
-          await _apiClient.setTokens(accessToken: accessToken, refreshToken: refreshToken);
-        }
+    if (res is Map<String, dynamic>) {
+      final accessToken = res['accessToken'] as String?;
+      final refreshToken = res['refreshToken'] as String?;
+      if (accessToken != null) {
+        await _apiClient.setTokens(accessToken: accessToken, refreshToken: refreshToken);
       }
-
-      return await getMe();
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        await _apiClient.setTokens(accessToken: 'demo-token', refreshToken: 'demo-refresh');
-        _cachedProfile = SampleData.doctor;
-        return SampleData.doctor;
-      }
-      rethrow;
     }
+
+    return await getMe();
   }
 
   Future<void> resetPassword({
@@ -117,16 +87,11 @@ class DoctorAuthRepository {
     required String verificationCode,
     required String newPassword,
   }) async {
-    try {
-      await _apiClient.post('/doctor/forgot-password', {
-        'identifier': identifier.trim(),
-        'verificationCode': verificationCode.trim(),
-        'newPassword': newPassword,
-      });
-    } catch (e) {
-      if (AppConfig.demoMode) return;
-      rethrow;
-    }
+    await _apiClient.post('/doctor/forgot-password', {
+      'identifier': identifier.trim(),
+      'verificationCode': verificationCode.trim(),
+      'newPassword': newPassword,
+    });
   }
 
   Future<DoctorProfile> completeProfile({
@@ -136,35 +101,19 @@ class DoctorAuthRepository {
     required List<String> qualifications,
     required List<String> specialties,
   }) async {
-    try {
-      final res = await _apiClient.post('/doctors/me/complete-profile', {
-        'professionalBio': professionalBio.trim(),
-        'gender': gender,
-        'languages': languages,
-        'qualifications': qualifications,
-        'specialties': specialties,
-      });
+    final res = await _apiClient.post('/doctors/me/complete-profile', {
+      'professionalBio': professionalBio.trim(),
+      'gender': gender,
+      'languages': languages,
+      'qualifications': qualifications,
+      'specialties': specialties,
+    });
 
-      if (res is Map<String, dynamic>) {
-        _cachedProfile = DoctorProfile.fromJson(res);
-        return _cachedProfile!;
-      }
-      return await getMe();
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        _cachedProfile = SampleData.doctor.copyWith(
-          professionalBio: professionalBio,
-          gender: gender,
-          languages: languages,
-          qualifications: qualifications,
-          specialties: specialties,
-          profileComplete: true,
-          verificationStatus: VerificationStatus.PENDING_VERIFICATION,
-        );
-        return _cachedProfile!;
-      }
-      rethrow;
+    if (res is Map<String, dynamic>) {
+      _cachedProfile = DoctorProfile.fromJson(res);
+      return _cachedProfile!;
     }
+    return await getMe();
   }
 
   Future<DoctorProfile> getMe() async {
@@ -176,8 +125,7 @@ class DoctorAuthRepository {
       }
       throw ApiException('Invalid profile payload returned');
     } catch (e) {
-      if (AppConfig.demoMode || _cachedProfile != null) {
-        _cachedProfile ??= SampleData.doctor;
+      if (_cachedProfile != null) {
         return _cachedProfile!;
       }
       rethrow;
@@ -194,58 +142,31 @@ class DoctorAuthRepository {
     List<String>? specialties,
     String? profilePicture,
   }) async {
-    try {
-      final payload = <String, dynamic>{
-        if (firstName != null) 'firstName': firstName.trim(),
-        if (lastName != null) 'lastName': lastName.trim(),
-        if (professionalBio != null) 'professionalBio': professionalBio.trim(),
-        'gender': ?gender,
-        'profilePicture': ?profilePicture,
-        'languages': ?languages,
-        'qualifications': ?qualifications,
-        'specialties': ?specialties,
-      };
-      final res = await _apiClient.put('/doctors/me', payload);
+    final payload = <String, dynamic>{
+      if (firstName != null) 'firstName': firstName.trim(),
+      if (lastName != null) 'lastName': lastName.trim(),
+      if (professionalBio != null) 'professionalBio': professionalBio.trim(),
+      'gender': ?gender,
+      'profilePicture': ?profilePicture,
+      'languages': ?languages,
+      'qualifications': ?qualifications,
+      'specialties': ?specialties,
+    };
+    final res = await _apiClient.put('/doctors/me', payload);
 
-      if (res is Map<String, dynamic>) {
-        _cachedProfile = DoctorProfile.fromJson(res);
-        return _cachedProfile!;
-      }
-      return await getMe();
-    } catch (e) {
-      if (AppConfig.demoMode && _cachedProfile != null) {
-        _cachedProfile = _cachedProfile!.copyWith(
-          firstName: firstName,
-          lastName: lastName,
-          professionalBio: professionalBio,
-          gender: gender,
-          languages: languages,
-          qualifications: qualifications,
-          specialties: specialties,
-          profilePictureUrl: profilePicture,
-        );
-        return _cachedProfile!;
-      }
-      rethrow;
+    if (res is Map<String, dynamic>) {
+      _cachedProfile = DoctorProfile.fromJson(res);
+      return _cachedProfile!;
     }
+    return await getMe();
   }
 
   Future<void> updateOnlineStatus(DoctorStatus status) async {
-    try {
-      await _apiClient.patch('/doctors/status', {
-        'status': status.value,
-      });
-      if (_cachedProfile != null) {
-        _cachedProfile = _cachedProfile!.copyWith(status: status);
-      }
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        if (_cachedProfile != null) {
-          _cachedProfile = _cachedProfile!.copyWith(status: status);
-        }
-        return;
-      }
-      rethrow;
+    await _apiClient.patch('/doctors/status', {
+      'status': status.value,
+    });
+    if (_cachedProfile != null) {
+      _cachedProfile = _cachedProfile!.copyWith(status: status);
     }
   }
 
@@ -261,19 +182,11 @@ class DoctorAuthRepository {
   }
 
   Future<void> updateProfilePicture(String url) async {
-    try {
-      await _apiClient.patch('/doctors/me/profile-picture', {
-        'profilePicture': url,
-      });
-      if (_cachedProfile != null) {
-        _cachedProfile = _cachedProfile!.copyWith(profilePictureUrl: url);
-      }
-    } catch (e) {
-      if (AppConfig.demoMode && _cachedProfile != null) {
-        _cachedProfile = _cachedProfile!.copyWith(profilePictureUrl: url);
-        return;
-      }
-      rethrow;
+    await _apiClient.patch('/doctors/me/profile-picture', {
+      'profilePicture': url,
+    });
+    if (_cachedProfile != null) {
+      _cachedProfile = _cachedProfile!.copyWith(profilePictureUrl: url);
     }
   }
 

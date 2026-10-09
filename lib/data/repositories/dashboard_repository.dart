@@ -1,7 +1,5 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
-import '../services/sample_data.dart';
 
 class DashboardRepository {
   DashboardRepository(this._apiClient);
@@ -20,10 +18,7 @@ class DashboardRepository {
       return rawList
           .map((e) => BookingItem.fromJson(e as Map<String, dynamic>))
           .toList();
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        return SampleData.todayBookings;
-      }
+    } catch (_) {
       return [];
     }
   }
@@ -34,11 +29,8 @@ class DashboardRepository {
       if (res is Map<String, dynamic>) {
         return WalletSummary.fromJson(res);
       }
-      return AppConfig.demoMode ? SampleData.walletSummary : const WalletSummary();
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        return SampleData.walletSummary;
-      }
+      return const WalletSummary();
+    } catch (_) {
       return const WalletSummary();
     }
   }
@@ -59,11 +51,8 @@ class DashboardRepository {
       if (res is List) {
         return res.map((e) => AvailabilityWindow.fromJson(e as Map<String, dynamic>)).toList();
       }
-      return AppConfig.demoMode ? SampleData.availabilityWindows : [];
-    } catch (e) {
-      if (AppConfig.demoMode) {
-        return SampleData.availabilityWindows;
-      }
+      return [];
+    } catch (_) {
       return [];
     }
   }

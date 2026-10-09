@@ -1,4 +1,3 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 
@@ -13,9 +12,9 @@ class PricingRepository {
       if (res is List) {
         return res.map((e) => PriceRequestItem.fromJson(e as Map<String, dynamic>)).toList();
       }
-      return AppConfig.demoMode ? _sampleHistory : [];
+      return [];
     } catch (_) {
-      return AppConfig.demoMode ? _sampleHistory : [];
+      return [];
     }
   }
 
@@ -33,15 +32,4 @@ class PricingRepository {
       return false;
     }
   }
-
-  static final List<PriceRequestItem> _sampleHistory = [
-    PriceRequestItem(
-      id: 'pr-1',
-      currentPriceLkr: 4500.0,
-      requestedPriceLkr: 5000.0,
-      reason: 'Board certification completion and updated SLMC senior specialist status.',
-      status: 'APPROVED',
-      createdAt: DateTime.now().subtract(const Duration(days: 45)),
-    ),
-  ];
 }

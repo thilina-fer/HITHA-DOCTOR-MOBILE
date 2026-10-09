@@ -22,10 +22,10 @@ class DoctorGreetingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final doctorName = (doctor != null && doctor!.firstName.isNotEmpty)
         ? 'Dr. ${doctor!.firstName}'
-        : 'Dr. Thilina';
+        : 'Doctor';
     final categoryLabel = (doctor != null)
         ? doctor!.category.label.toUpperCase()
-        : 'CLINICAL COUNSELOR';
+        : 'PRACTITIONER';
 
     return Container(
       width: double.infinity,

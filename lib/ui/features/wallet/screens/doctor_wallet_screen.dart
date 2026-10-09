@@ -7,6 +7,7 @@ import '../../../../data/services/api_client.dart';
 import '../../../../domain/models/models.dart';
 import '../../../core/theme/hitha_theme.dart';
 import '../../../core/widgets/hitha_widgets.dart';
+import '../../auth/view_models/auth_view_model.dart';
 
 class DoctorWalletScreen extends StatefulWidget {
   const DoctorWalletScreen({super.key});
@@ -232,10 +233,11 @@ class _DoctorWalletScreenState extends State<DoctorWalletScreen> {
   }
 
   void _showAddBankSheet() {
+    final currentDoctor = context.read<AuthViewModel>().doctor;
     String selectedBank = _banks.isNotEmpty ? _banks.first.name : 'Commercial Bank of Ceylon';
     final accNumberController = TextEditingController();
-    final holderNameController = TextEditingController(text: 'Dr. Thilina Dilshan Fernando');
-    final branchController = TextEditingController(text: 'Colombo Central');
+    final holderNameController = TextEditingController(text: currentDoctor?.fullName ?? '');
+    final branchController = TextEditingController();
     bool isSaving = false;
 
     showModalBottomSheet(

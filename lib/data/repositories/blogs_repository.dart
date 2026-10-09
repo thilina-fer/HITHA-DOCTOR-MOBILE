@@ -1,4 +1,3 @@
-import '../../config/app_config.dart';
 import '../../domain/models/models.dart';
 import '../services/api_client.dart';
 
@@ -18,7 +17,7 @@ class BlogsRepository {
       }
       return rawList.map((e) => ArticleItem.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return AppConfig.demoMode ? _sampleArticles : [];
+      return [];
     }
   }
 
@@ -51,25 +50,4 @@ class BlogsRepository {
       return false;
     }
   }
-
-  static final List<ArticleItem> _sampleArticles = [
-    ArticleItem(
-      id: 'art-1',
-      title: 'Managing Clinical Anxiety: Cognitive Grounding Techniques',
-      slug: 'managing-clinical-anxiety',
-      excerpt: 'Practical sensory 5-4-3-2-1 grounding exercises designed for rapid stabilization during acute anxiety triggers.',
-      status: 'PUBLISHED',
-      publishedAt: DateTime.now().subtract(const Duration(days: 12)),
-      readTimeMinutes: 5,
-    ),
-    ArticleItem(
-      id: 'art-2',
-      title: 'Understanding Sleep Hygiene & Melatonin Regulation',
-      slug: 'sleep-hygiene-melatonin',
-      excerpt: 'Why circadian rhythms and digital light discipline are crucial for long-term psychological recovery.',
-      status: 'UNDER_REVIEW',
-      publishedAt: DateTime.now().subtract(const Duration(days: 3)),
-      readTimeMinutes: 4,
-    ),
-  ];
 }
