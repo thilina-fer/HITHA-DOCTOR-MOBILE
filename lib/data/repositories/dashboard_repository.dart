@@ -67,4 +67,34 @@ class DashboardRepository {
       return [];
     }
   }
+
+  Future<Map<String, dynamic>> getAvailabilityConfig() async {
+    try {
+      final res = await _apiClient.get('/doctors/availability/templates');
+      List<WeeklyTemplateItem> templates = [];
+      List<CustomSlotItem> customSlots = [];
+
+      if (res is Map<String, dynamic>) {
+        if (res['templates'] is List) {
+          templates = (res['templates'] as List)
+              .map((e) => WeeklyTemplateItem.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+        if (res['customSlots'] is List) {
+          customSlots = (res['customSlots'] as List)
+              .map((e) => CustomSlotItem.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      return {
+        'templates': templates,
+        'customSlots': customSlots,
+      };
+    } catch (_) {
+      return {
+        'templates': <WeeklyTemplateItem>[],
+        'customSlots': <CustomSlotItem>[],
+      };
+    }
+  }
 }

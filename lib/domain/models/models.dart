@@ -315,10 +315,10 @@ class AvailabilityWindow {
     DateTime? start;
     DateTime? end;
     if (json['startTime'] != null && json['startTime'].toString().contains('T')) {
-      start = DateTime.tryParse(json['startTime'] as String);
+      start = DateTime.tryParse(json['startTime'] as String)?.toLocal();
     }
     if (json['endTime'] != null && json['endTime'].toString().contains('T')) {
-      end = DateTime.tryParse(json['endTime'] as String);
+      end = DateTime.tryParse(json['endTime'] as String)?.toLocal();
     }
 
     final dayOfWeek = start != null ? start.weekday : (json['dayOfWeek'] as int? ?? 1);
@@ -448,8 +448,8 @@ class CustomSlotItem {
   factory CustomSlotItem.fromJson(Map<String, dynamic> json) {
     return CustomSlotItem(
       id: '${json['id'] ?? ''}',
-      startTime: DateTime.tryParse(json['startTime'] as String? ?? '') ?? DateTime.now(),
-      endTime: DateTime.tryParse(json['endTime'] as String? ?? '') ?? DateTime.now().add(const Duration(hours: 1)),
+      startTime: DateTime.tryParse(json['startTime'] as String? ?? '')?.toLocal() ?? DateTime.now(),
+      endTime: DateTime.tryParse(json['endTime'] as String? ?? '')?.toLocal() ?? DateTime.now().add(const Duration(hours: 1)),
     );
   }
 }

@@ -235,7 +235,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       const SizedBox(height: 16),
 
                       // Section 2: Availability Section (Minimal & Compact)
-                      _buildAvailabilitySection(context, dashVm),
+                      _buildAvailabilitySection(context, dashVm, authVm),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -738,21 +738,17 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   }
 
   // --- Section 2: Availability Section (Minimal & Compact) ---
-  Widget _buildAvailabilitySection(BuildContext context, DashboardViewModel dashVm) {
+  Widget _buildAvailabilitySection(BuildContext context, DashboardViewModel dashVm, AuthViewModel authVm) {
     // Generate 7 consecutive days starting today
     final now = DateTime.now();
     final dynamicDates = List.generate(7, (i) => now.add(Duration(days: i)));
     final selectedDate = dynamicDates[_selectedDateIndex < dynamicDates.length ? _selectedDateIndex : 0];
 
-    // Filter real availability windows from backend for the selected date
-    final daySlots = dashVm.availabilityWindows.where((w) {
-      if (w.startDateTime != null) {
-        return w.startDateTime!.year == selectedDate.year &&
-            w.startDateTime!.month == selectedDate.month &&
-            w.startDateTime!.day == selectedDate.day;
-      }
-      return w.dayOfWeek == selectedDate.weekday;
-    }).toList();
+    // Filter or synthesize availability slots for the selected date
+    final daySlots = dashVm.getSlotsForDate(
+      selectedDate,
+      defaultFee: authVm.doctor?.effectivePrice ?? 2500.0,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -770,7 +766,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => context.go(Routes.availability),
+              onTap: () async {
+                await context.push(Routes.availability);
+                if (context.mounted) {
+                  context.read<DashboardViewModel>().loadDashboard();
+                }
+              },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
@@ -1020,7 +1021,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
               // Manage & Add Time Slots button (Compact)
               InkWell(
-                onTap: () => context.go(Routes.availability),
+                onTap: () async {
+                  await context.push(Routes.availability);
+                  if (context.mounted) {
+                    context.read<DashboardViewModel>().loadDashboard();
+                  }
+                },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: double.infinity,
