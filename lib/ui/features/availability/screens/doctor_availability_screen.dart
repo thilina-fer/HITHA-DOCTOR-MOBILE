@@ -122,13 +122,13 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
-          children: const [
-            Icon(Icons.monetization_on_outlined, color: Color(0xFFD97706), size: 24),
-            SizedBox(width: 10),
+          children: [
+            const Icon(Icons.monetization_on_outlined, color: Color(0xFFD97706), size: 24),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Pricing Configuration Needed',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: HithaColors.forest),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: HithaColors.forest),
               ),
             ),
           ],
@@ -1164,17 +1164,17 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         centerTitle: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Schedule & Availability',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
                 color: HithaColors.forest,
                 letterSpacing: -0.3,
               ),
             ),
-            Text(
+            const Text(
               'Configure weekly templates & holiday leaves',
               style: TextStyle(
                 fontSize: 11,
@@ -1260,13 +1260,13 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Icon(Icons.info_outline, size: 16, color: Color(0xFF2563EB)),
-              SizedBox(width: 9),
+            children: [
+              const Icon(Icons.info_outline, size: 16, color: Color(0xFF2563EB)),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
                   'Pricing is automatic based on your clinical category. You can schedule multiple time windows on the same day (e.g. morning 07:00 – 10:00 and evening 17:00 – 21:00).',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF1E40AF), fontWeight: FontWeight.w500, height: 1.3),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF1E40AF), fontWeight: FontWeight.w500, height: 1.3),
                 ),
               ),
             ],
@@ -1606,10 +1606,10 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   if (!isValidTime) ...[
                     const SizedBox(height: 10),
                     Row(
-                      children: const [
-                        Icon(Icons.error_outline_rounded, size: 13, color: Color(0xFFDC2626)),
-                        SizedBox(width: 5),
-                        Text(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, size: 13, color: Color(0xFFDC2626)),
+                        const SizedBox(width: 5),
+                        const Text(
                           'Start time must be before end time',
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFDC2626)),
                         ),
@@ -1638,12 +1638,12 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.add_circle_outline_rounded, size: 16, color: HithaColors.forest),
-                  SizedBox(width: 8),
+                children: [
+                  const Icon(Icons.add_circle_outline_rounded, size: 16, color: HithaColors.forest),
+                  const SizedBox(width: 8),
                   Text(
                     'Add Day & Window',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: HithaColors.forest,
@@ -1706,15 +1706,15 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               border: Border.all(color: const Color(0xFFEDF2F7)),
             ),
             child: Column(
-              children: const [
-                Icon(Icons.event_available, size: 40, color: Color(0xFF94A3B8)),
-                SizedBox(height: 10),
-                Text(
+              children: [
+                const Icon(Icons.event_available, size: 40, color: Color(0xFF94A3B8)),
+                const SizedBox(height: 10),
+                const Text(
                   'No Custom Slots',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
                 ),
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'Add ad-hoc consultation windows for particular calendar days.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
@@ -1831,15 +1831,15 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               border: Border.all(color: const Color(0xFFEDF2F7)),
             ),
             child: Column(
-              children: const [
-                Icon(Icons.beach_access, size: 40, color: Color(0xFF94A3B8)),
-                SizedBox(height: 10),
-                Text(
+              children: [
+                const Icon(Icons.beach_access, size: 40, color: Color(0xFF94A3B8)),
+                const SizedBox(height: 10),
+                const Text(
                   'No Scheduled Leaves',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
                 ),
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'Your recurring schedule will remain open. Block dates whenever you plan vacation or medical leave.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
