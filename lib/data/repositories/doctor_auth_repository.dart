@@ -146,11 +146,11 @@ class DoctorAuthRepository {
       if (firstName != null) 'firstName': firstName.trim(),
       if (lastName != null) 'lastName': lastName.trim(),
       if (professionalBio != null) 'professionalBio': professionalBio.trim(),
-      'gender': ?gender,
-      'profilePicture': ?profilePicture,
-      'languages': ?languages,
-      'qualifications': ?qualifications,
-      'specialties': ?specialties,
+      if (gender != null) 'gender': gender,
+      if (profilePicture != null) 'profilePicture': profilePicture,
+      if (languages != null) 'languages': languages,
+      if (qualifications != null) 'qualifications': qualifications,
+      if (specialties != null) 'specialties': specialties,
     };
     final res = await _apiClient.put('/doctors/me', payload);
 
