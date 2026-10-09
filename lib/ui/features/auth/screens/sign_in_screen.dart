@@ -95,6 +95,34 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
 
+          // Back button to Get Started screen
+          Positioned(
+            top: 10,
+            left: 16,
+            child: SafeArea(
+              child: InkWell(
+                onTap: () => context.go(Routes.getStarted),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFE2EBE7)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A0D3B66),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF0F766E)),
+                ),
+              ),
+            ),
+          ),
+
           // 2. Main Scrollable Content
           SafeArea(
             child: Center(
@@ -106,11 +134,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const HithaBrandLogo(
-                        iconHeight: 64,
-                        textHeight: 24,
-                        isVertical: true,
-                        spacing: 12,
+                      const Hero(
+                        tag: 'hitha_brand_logo',
+                        child: HithaBrandLogo(
+                          iconHeight: 64,
+                          textHeight: 24,
+                          isVertical: true,
+                          spacing: 12,
+                        ),
                       ),
                       const SizedBox(height: 12),
 

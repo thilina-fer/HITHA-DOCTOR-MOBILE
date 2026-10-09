@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../ui/features/auth/screens/forgot_password_screen.dart';
@@ -12,11 +13,12 @@ import '../ui/features/bookings/screens/doctor_bookings_screen.dart';
 import '../ui/features/dashboard/screens/doctor_dashboard_screen.dart';
 import '../ui/features/finance/screens/doctor_finance_screen.dart';
 import '../ui/features/meeting/screens/telehealth_meeting_screen.dart';
+import '../ui/features/onboarding/screens/complete_profile_screen.dart';
+import '../ui/features/onboarding/screens/get_started_screen.dart';
 import '../ui/features/pricing/screens/doctor_pricing_screen.dart';
 import '../ui/features/profile/screens/doctor_profile_screen.dart';
-import '../ui/features/wallet/screens/doctor_wallet_screen.dart';
-import '../ui/features/onboarding/screens/complete_profile_screen.dart';
 import '../ui/features/shell/doctor_shell.dart';
+import '../ui/features/wallet/screens/doctor_wallet_screen.dart';
 import 'routes.dart';
 
 GoRouter createRouter(AuthViewModel authVm) {
@@ -30,14 +32,15 @@ GoRouter createRouter(AuthViewModel authVm) {
       final isProfileComplete = authVm.isProfileComplete;
       final path = state.uri.path;
 
-      final isAuthRoute = path == Routes.login ||
+      final isAuthRoute = path == Routes.getStarted ||
+          path == Routes.login ||
           path == Routes.register ||
           path == Routes.verifyPhone ||
           path == Routes.forgotPassword;
 
-      // 1. If not authenticated, restrict to auth routes
+      // 1. If not authenticated, restrict to auth routes (default to Get Started screen)
       if (!isAuth) {
-        return isAuthRoute ? null : Routes.login;
+        return isAuthRoute ? null : Routes.getStarted;
       }
 
       // 2. If authenticated but profile is incomplete, force complete-profile
@@ -45,7 +48,7 @@ GoRouter createRouter(AuthViewModel authVm) {
         return path == Routes.completeProfile ? null : Routes.completeProfile;
       }
 
-      // 3. If authenticated & complete, prevent revisiting login/register/complete-profile
+      // 3. If authenticated & complete, prevent revisiting onboarding/auth
       if (isAuthRoute || path == Routes.completeProfile) {
         return Routes.dashboard;
       }
@@ -53,14 +56,47 @@ GoRouter createRouter(AuthViewModel authVm) {
       return null;
     },
     routes: [
-      // Public Auth routes
+      // Public Onboarding & Auth routes with custom smooth animations
+      GoRoute(
+        path: Routes.getStarted,
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          child: const GetStartedScreen(),
+          transitionDuration: const Duration(milliseconds: 400),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      ),
       GoRoute(
         path: Routes.login,
-        builder: (context, state) => const SignInScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          child: const SignInScreen(),
+          transitionDuration: const Duration(milliseconds: 420),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+            return SlideTransition(
+              position: Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(curved),
+              child: FadeTransition(opacity: curved, child: child),
+            );
+          },
+        ),
       ),
       GoRoute(
         path: Routes.register,
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          child: const RegisterScreen(),
+          transitionDuration: const Duration(milliseconds: 420),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+            return SlideTransition(
+              position: Tween<Offset>(begin: const Offset(0.08, 0), end: Offset.zero).animate(curved),
+              child: FadeTransition(opacity: curved, child: child),
+            );
+          },
+        ),
       ),
       GoRoute(
         path: Routes.verifyPhone,

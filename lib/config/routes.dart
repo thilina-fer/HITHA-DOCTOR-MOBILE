@@ -1,4 +1,5 @@
 abstract final class Routes {
+  static const getStarted = '/doctor/get-started';
   static const login = '/doctor/login';
   static const register = '/doctor/register';
   static const verifyPhone = '/doctor/verify-phone';

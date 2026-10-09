@@ -548,7 +548,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     if (confirmed == true && mounted) {
       await context.read<AuthViewModel>().logout();
       if (mounted) {
-        context.go(Routes.login);
+        context.go(Routes.getStarted);
       }
     }
   }
