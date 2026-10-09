@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'config/router.dart';
@@ -37,19 +38,35 @@ void main() async {
   );
 }
 
-class HithaDoctorApp extends StatelessWidget {
+class HithaDoctorApp extends StatefulWidget {
   const HithaDoctorApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final authVm = context.watch<AuthViewModel>();
-    final router = createRouter(authVm);
+  State<HithaDoctorApp> createState() => _HithaDoctorAppState();
+}
 
+class _HithaDoctorAppState extends State<HithaDoctorApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = createRouter(context.read<AuthViewModel>());
+  }
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Hitha Doctor Portal',
       debugShowCheckedModeBanner: false,
       theme: buildHithaTheme(),
-      routerConfig: router,
+      routerConfig: _router,
     );
   }
 }

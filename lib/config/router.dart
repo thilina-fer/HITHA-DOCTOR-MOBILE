@@ -23,7 +23,7 @@ import 'routes.dart';
 
 GoRouter createRouter(AuthViewModel authVm) {
   return GoRouter(
-    initialLocation: Routes.dashboard,
+    initialLocation: authVm.isAuthenticated ? Routes.dashboard : Routes.getStarted,
     refreshListenable: authVm,
     redirect: (context, state) {
       if (!authVm.isInitialized) return null;
@@ -37,6 +37,13 @@ GoRouter createRouter(AuthViewModel authVm) {
           path == Routes.register ||
           path == Routes.verifyPhone ||
           path == Routes.forgotPassword;
+
+      // Handle root '/' or empty path explicitly
+      if (path == '/' || path.isEmpty) {
+        if (!isAuth) return Routes.getStarted;
+        if (!isProfileComplete) return Routes.completeProfile;
+        return Routes.dashboard;
+      }
 
       // 1. If not authenticated, restrict to auth routes (default to Get Started screen)
       if (!isAuth) {
