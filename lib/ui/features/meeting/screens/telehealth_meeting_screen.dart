@@ -93,7 +93,8 @@ class _TelehealthMeetingScreenState extends State<TelehealthMeetingScreen> {
 
     if (end == true && mounted) {
       _sessionTimer?.cancel();
-      context.pop();
+      await _meetingRepo.completeSession(widget.bookingId);
+      if (mounted) context.pop();
     }
   }
 

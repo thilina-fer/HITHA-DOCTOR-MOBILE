@@ -84,6 +84,39 @@ class MeetingRepository {
     }
   }
 
+  Future<bool> completeSession(String bookingId) async {
+    try {
+      await _apiClient.post('/session/$bookingId/complete');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSessionDocuments(String bookingId) async {
+    try {
+      final res = await _apiClient.get('/doctors/sessions/$bookingId/documents');
+      if (res is List) {
+        return res.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPatientNotesHistory(String patientId) async {
+    try {
+      final res = await _apiClient.get('/doctors/patients/$patientId/notes-history');
+      if (res is List) {
+        return res.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   static const List<Map<String, dynamic>> _defaultDrugs = [
     {'id': 'd1', 'name': 'Sertraline 50mg', 'form': 'Tablet', 'dosage': '50mg OD'},
     {'id': 'd2', 'name': 'Escitalopram 10mg', 'form': 'Tablet', 'dosage': '10mg OD morning'},

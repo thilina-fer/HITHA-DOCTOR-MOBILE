@@ -58,48 +58,46 @@ class AvailabilityRepository {
     }
   }
 
-  Future<bool> saveWeeklyTemplates(
+  /// Saves weekly recurring templates to the backend (`POST /doctors/availability`).
+  /// Throws [ApiException] with the backend's exact validation or business error message.
+  Future<void> saveWeeklyTemplates(
     List<WeeklyTemplateItem> templates, {
     List<CustomSlotItem>? existingCustomSlots,
   }) async {
-    try {
-      final active = templates.where((t) => t.isActive).map((t) => t.toJson()).toList();
-      final customPayload = existingCustomSlots?.map((cs) => {
-            'startTime': cs.startTime.toUtc().toIso8601String(),
-            'endTime': cs.endTime.toUtc().toIso8601String(),
-          }).toList() ?? [];
+    final active = templates.where((t) => t.isActive).map((t) => t.toJson()).toList();
+    final Map<String, dynamic> body = {
+      'templates': active,
+    };
 
-      await _apiClient.post('/doctors/availability', {
-        'templates': active,
-        'customSlots': customPayload,
-      });
-      return true;
-    } catch (_) {
-      return false;
+    if (existingCustomSlots != null && existingCustomSlots.isNotEmpty) {
+      body['customSlots'] = existingCustomSlots.map((cs) => {
+            'startTime': cs.rawStartTime ?? cs.startTime.toUtc().toIso8601String(),
+            'endTime': cs.rawEndTime ?? cs.endTime.toUtc().toIso8601String(),
+          }).toList();
+    } else {
+      body['customSlots'] = [];
     }
+
+    await _apiClient.post('/doctors/availability', body);
   }
 
-  Future<bool> addCustomSlot(DateTime start, DateTime end) async {
-    try {
-      await _apiClient.post('/doctors/availability/custom-slots', {
-        'startTime': start.toUtc().toIso8601String(),
-        'endTime': end.toUtc().toIso8601String(),
-      });
-      return true;
-    } catch (_) {
-      return false;
+  /// Adds a single one-off ad-hoc slot (`POST /doctors/availability/custom-slots`).
+  Future<void> addCustomSlot(DateTime start, DateTime end) async {
+    if (!end.isAfter(start)) {
+      throw ApiException('End time must be strictly after start time.');
     }
+    await _apiClient.post('/doctors/availability/custom-slots', {
+      'startTime': start.toUtc().toIso8601String(),
+      'endTime': end.toUtc().toIso8601String(),
+    });
   }
 
-  Future<bool> deleteCustomSlot(String id) async {
-    try {
-      await _apiClient.delete('/doctors/availability/custom-slots/$id');
-      return true;
-    } catch (_) {
-      return false;
-    }
+  /// Removes a one-off custom slot (`DELETE /doctors/availability/custom-slots/{id}`).
+  Future<void> deleteCustomSlot(String id) async {
+    await _apiClient.delete('/doctors/availability/custom-slots/$id');
   }
 
+  /// Fetches scheduled leaves and blocked ranges (`GET /doctors/blocked-dates`).
   Future<List<BlockedDateItem>> getBlockedDates() async {
     try {
       final res = await _apiClient.get('/doctors/blocked-dates');
@@ -112,25 +110,20 @@ class AvailabilityRepository {
     }
   }
 
-  Future<bool> addBlockedDate(DateTime start, DateTime end, String reason) async {
-    try {
-      await _apiClient.post('/doctors/blocked-dates', {
-        'startTime': start.toUtc().toIso8601String(),
-        'endTime': end.toUtc().toIso8601String(),
-        'reason': reason,
-      });
-      return true;
-    } catch (_) {
-      return false;
+  /// Schedules leave or blocked dates (`POST /doctors/blocked-dates`).
+  Future<void> addBlockedDate(DateTime start, DateTime end, String reason) async {
+    if (!end.isAfter(start)) {
+      throw ApiException('End date/time must be strictly after start date/time.');
     }
+    await _apiClient.post('/doctors/blocked-dates', {
+      'startTime': start.toUtc().toIso8601String(),
+      'endTime': end.toUtc().toIso8601String(),
+      'reason': reason.trim(),
+    });
   }
 
-  Future<bool> deleteBlockedDate(String id) async {
-    try {
-      await _apiClient.delete('/doctors/blocked-dates/$id');
-      return true;
-    } catch (_) {
-      return false;
-    }
+  /// Removes scheduled leave (`DELETE /doctors/blocked-dates/{id}`).
+  Future<void> deleteBlockedDate(String id) async {
+    await _apiClient.delete('/doctors/blocked-dates/$id');
   }
 }

@@ -112,8 +112,19 @@ class ApiClient {
     final body = res.body.isEmpty ? null : jsonDecode(res.body);
     final envelope = body is Map<String, dynamic> ? body : null;
     if (res.statusCode >= 400 || envelope?['success'] == false) {
+      String message = envelope?['message'] as String? ?? 'Request failed (${res.statusCode})';
+      if (envelope?['errors'] is List && (envelope!['errors'] as List).isNotEmpty) {
+        final validationMsgs = (envelope['errors'] as List)
+            .map((e) => e is Map ? e['message']?.toString() : e?.toString())
+            .whereType<String>()
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (validationMsgs.isNotEmpty) {
+          message = '$message: ${validationMsgs.join(", ")}';
+        }
+      }
       throw ApiException(
-        envelope?['message'] as String? ?? 'Request failed (${res.statusCode})',
+        message,
         status: res.statusCode,
       );
     }

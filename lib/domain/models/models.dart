@@ -415,6 +415,16 @@ class WeeklyTemplateItem {
     );
   }
 
+  static String formatToApiTime(String time) {
+    final clean = time.trim();
+    final parts = clean.split(':');
+    if (parts.isEmpty) return '09:00:00';
+    final h = (int.tryParse(parts[0]) ?? 9).toString().padLeft(2, '0');
+    final m = (parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0).toString().padLeft(2, '0');
+    final s = (parts.length > 2 ? int.tryParse(parts[2]) ?? 0 : 0).toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+
   factory WeeklyTemplateItem.fromJson(Map<String, dynamic> json) {
     final s = json['startTime'] as String? ?? '09:00';
     final e = json['endTime'] as String? ?? '17:00';
@@ -429,8 +439,8 @@ class WeeklyTemplateItem {
 
   Map<String, dynamic> toJson() => {
         'dayOfWeek': dayOfWeek,
-        'startTime': startTime.length == 5 ? '$startTime:00' : startTime,
-        'endTime': endTime.length == 5 ? '$endTime:00' : endTime,
+        'startTime': formatToApiTime(startTime),
+        'endTime': formatToApiTime(endTime),
       };
 }
 
@@ -438,18 +448,26 @@ class CustomSlotItem {
   final String id;
   final DateTime startTime;
   final DateTime endTime;
+  final String? rawStartTime;
+  final String? rawEndTime;
 
   const CustomSlotItem({
     required this.id,
     required this.startTime,
     required this.endTime,
+    this.rawStartTime,
+    this.rawEndTime,
   });
 
   factory CustomSlotItem.fromJson(Map<String, dynamic> json) {
+    final rawStart = json['startTime'] as String?;
+    final rawEnd = json['endTime'] as String?;
     return CustomSlotItem(
       id: '${json['id'] ?? ''}',
-      startTime: DateTime.tryParse(json['startTime'] as String? ?? '')?.toLocal() ?? DateTime.now(),
-      endTime: DateTime.tryParse(json['endTime'] as String? ?? '')?.toLocal() ?? DateTime.now().add(const Duration(hours: 1)),
+      startTime: DateTime.tryParse(rawStart ?? '')?.toLocal() ?? DateTime.now(),
+      endTime: DateTime.tryParse(rawEnd ?? '')?.toLocal() ?? DateTime.now().add(const Duration(hours: 1)),
+      rawStartTime: rawStart,
+      rawEndTime: rawEnd,
     );
   }
 }

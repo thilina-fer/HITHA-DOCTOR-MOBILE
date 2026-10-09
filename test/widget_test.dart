@@ -39,4 +39,33 @@ void main() {
     expect(doc.profileComplete, true);
     expect(doc.effectivePrice, 5000.0);
   });
+
+  test('WeeklyTemplateItem correctly normalizes time to HH:mm:ss for backend compatibility', () {
+    const item1 = WeeklyTemplateItem(dayOfWeek: 1, startTime: '9:00', endTime: '17:00');
+    expect(item1.toJson(), {
+      'dayOfWeek': 1,
+      'startTime': '09:00:00',
+      'endTime': '17:00:00',
+    });
+
+    const item2 = WeeklyTemplateItem(dayOfWeek: 2, startTime: '07:30', endTime: '12:00:00');
+    expect(item2.toJson(), {
+      'dayOfWeek': 2,
+      'startTime': '07:30:00',
+      'endTime': '12:00:00',
+    });
+  });
+
+  test('CustomSlotItem preserves raw timestamps and parses correctly', () {
+    final slot = CustomSlotItem.fromJson({
+      'id': 'slot-123',
+      'startTime': '2026-10-15T08:00:00Z',
+      'endTime': '2026-10-15T10:00:00Z',
+    });
+
+    expect(slot.id, 'slot-123');
+    expect(slot.rawStartTime, '2026-10-15T08:00:00Z');
+    expect(slot.rawEndTime, '2026-10-15T10:00:00Z');
+    expect(slot.startTime.isBefore(slot.endTime), true);
+  });
 }

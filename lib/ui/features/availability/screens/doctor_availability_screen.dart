@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../config/routes.dart';
 import '../../../../data/repositories/availability_repository.dart';
 import '../../../../data/repositories/bookings_repository.dart';
 import '../../../../data/repositories/dashboard_repository.dart';
@@ -67,9 +69,11 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        showHithaSnack(context, 'Notice: Could not refresh live schedule ($msg)', isError: false);
       }
     }
   }
@@ -92,15 +96,79 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     }
 
     setState(() => _isSaving = true);
-    final success = await _repo.saveWeeklyTemplates(_templates, existingCustomSlots: _customSlots);
-    if (!mounted) return;
-    setState(() => _isSaving = false);
-    if (success) {
+    try {
+      await _repo.saveWeeklyTemplates(_templates, existingCustomSlots: _customSlots);
+      if (!mounted) return;
       context.read<DashboardViewModel>().loadDashboard();
       showHithaSnack(context, 'Weekly schedule updated successfully!');
-    } else {
-      showHithaSnack(context, 'Failed to update schedule. Please check connection and try again.', isError: true);
+      await _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      if (msg.contains('Pricing is not configured')) {
+        _showPricingNoticeDialog(msg);
+      } else {
+        showHithaSnack(context, 'Failed to update schedule: $msg', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
+  }
+
+  void _showPricingNoticeDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.monetization_on_outlined, color: Color(0xFFD97706), size: 24),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Pricing Configuration Needed',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: HithaColors.forest),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Please verify that your clinical category and base fee are set in your profile, or submit a custom pricing request before publishing availability.',
+              style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), height: 1.3),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Dismiss', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push(Routes.profile);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: HithaColors.forest,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('View Profile', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _addTemplateRow() {
@@ -837,7 +905,6 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   PrimaryButton(
                     text: 'Confirm & Publish Slot',
                     onPressed: () async {
-                      Navigator.pop(ctx);
                       final start = DateTime(
                         selectedDate.year,
                         selectedDate.month,
@@ -852,13 +919,28 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                         endTime.hour,
                         endTime.minute,
                       );
-                      final ok = await _repo.addCustomSlot(start, end);
-                      if (mounted) {
+
+                      if (!end.isAfter(start)) {
                         showHithaSnack(
                           context,
-                          ok ? 'Custom slot created successfully' : 'Slot added to calendar.',
+                          'End time must be after start time.',
+                          isError: true,
                         );
-                        _loadData();
+                        return;
+                      }
+
+                      Navigator.pop(ctx);
+                      try {
+                        await _repo.addCustomSlot(start, end);
+                        if (mounted) {
+                          showHithaSnack(context, 'Custom slot added successfully!');
+                          _loadData();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          final msg = e.toString().replaceFirst('Exception: ', '');
+                          showHithaSnack(context, 'Failed to add custom slot: $msg', isError: true);
+                        }
                       }
                     },
                   ),
@@ -1023,14 +1105,44 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   PrimaryButton(
                     text: 'Confirm & Block Dates',
                     onPressed: () async {
-                      Navigator.pop(ctx);
-                      final ok = await _repo.addBlockedDate(startDate, endDate, reasonController.text);
-                      if (mounted) {
+                      final start = DateTime(
+                        startDate.year,
+                        startDate.month,
+                        startDate.day,
+                        0,
+                        0,
+                        0,
+                      );
+                      final end = DateTime(
+                        endDate.year,
+                        endDate.month,
+                        endDate.day,
+                        23,
+                        59,
+                        59,
+                      );
+
+                      if (!end.isAfter(start)) {
                         showHithaSnack(
                           context,
-                          ok ? 'Dates blocked successfully.' : 'Leave scheduled.',
+                          'End date must be on or after start date.',
+                          isError: true,
                         );
-                        _loadData();
+                        return;
+                      }
+
+                      Navigator.pop(ctx);
+                      try {
+                        await _repo.addBlockedDate(start, end, reasonController.text);
+                        if (mounted) {
+                          showHithaSnack(context, 'Leave / Blocked dates scheduled successfully!');
+                          _loadData();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          final msg = e.toString().replaceFirst('Exception: ', '');
+                          showHithaSnack(context, 'Failed to block dates: $msg', isError: true);
+                        }
                       }
                     },
                   ),
@@ -1659,10 +1771,17 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
                     onPressed: () async {
-                      final ok = await _repo.deleteCustomSlot(slot.id);
-                      if (ok && mounted) {
-                        showHithaSnack(context, 'Custom slot deleted');
-                        _loadData();
+                      try {
+                        await _repo.deleteCustomSlot(slot.id);
+                        if (mounted) {
+                          showHithaSnack(context, 'Custom slot deleted');
+                          _loadData();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          final msg = e.toString().replaceFirst('Exception: ', '');
+                          showHithaSnack(context, 'Failed to delete slot: $msg', isError: true);
+                        }
                       }
                     },
                   ),
@@ -1776,10 +1895,17 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
                     onPressed: () async {
-                      final ok = await _repo.deleteBlockedDate(block.id);
-                      if (ok && mounted) {
-                        showHithaSnack(context, 'Blocked date removed');
-                        _loadData();
+                      try {
+                        await _repo.deleteBlockedDate(block.id);
+                        if (mounted) {
+                          showHithaSnack(context, 'Blocked date removed');
+                          _loadData();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          final msg = e.toString().replaceFirst('Exception: ', '');
+                          showHithaSnack(context, 'Failed to remove blocked date: $msg', isError: true);
+                        }
                       }
                     },
                   ),
