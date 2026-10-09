@@ -46,8 +46,8 @@ class DashboardRepository {
   Future<List<AvailabilityWindow>> getAvailabilityWindows() async {
     try {
       final now = DateTime.now();
-      final s = now.subtract(const Duration(days: 7));
-      final e = now.add(const Duration(days: 21));
+      final s = now.subtract(const Duration(days: 3));
+      final e = now.add(const Duration(days: 35));
       final startIso = "${s.year}-${s.month.toString().padLeft(2, '0')}-${s.day.toString().padLeft(2, '0')}";
       final endIso = "${e.year}-${e.month.toString().padLeft(2, '0')}-${e.day.toString().padLeft(2, '0')}";
 

@@ -75,6 +75,7 @@ class DashboardViewModel extends ChangeNotifier {
     }).toList();
 
     if (direct.isNotEmpty) {
+      direct.sort((a, b) => a.startTime.compareTo(b.startTime));
       return direct;
     }
 
@@ -106,9 +107,9 @@ class DashboardViewModel extends ChangeNotifier {
       );
     }
 
-    // 3. Synthesize from active weekly recurring template for this weekday
-    final template = _weeklyTemplates.where((t) => t.dayOfWeek == date.weekday && t.isActive).firstOrNull;
-    if (template != null) {
+    // 3. Synthesize from ALL active weekly recurring templates for this weekday
+    final matchingTemplates = _weeklyTemplates.where((t) => t.dayOfWeek == date.weekday && t.isActive).toList();
+    for (final template in matchingTemplates) {
       final partsStart = template.startTime.split(':');
       final partsEnd = template.endTime.split(':');
       final startHour = partsStart.isNotEmpty ? int.tryParse(partsStart[0]) ?? 9 : 9;
@@ -136,7 +137,7 @@ class DashboardViewModel extends ChangeNotifier {
 
         synthesized.add(
           AvailabilityWindow(
-            id: 'tpl-${date.weekday}-${current.hour}',
+            id: 'tpl-${date.weekday}-${current.hour}-${current.minute}',
             startDateTime: current,
             endDateTime: next,
             dayOfWeek: date.weekday,
@@ -152,6 +153,7 @@ class DashboardViewModel extends ChangeNotifier {
       }
     }
 
+    synthesized.sort((a, b) => a.startTime.compareTo(b.startTime));
     return synthesized;
   }
 

@@ -13,8 +13,6 @@ class AvailabilityRepository {
       const WeeklyTemplateItem(dayOfWeek: 3, startTime: '09:00', endTime: '17:00', isActive: true),
       const WeeklyTemplateItem(dayOfWeek: 4, startTime: '09:00', endTime: '17:00', isActive: true),
       const WeeklyTemplateItem(dayOfWeek: 5, startTime: '09:00', endTime: '17:00', isActive: true),
-      const WeeklyTemplateItem(dayOfWeek: 6, startTime: '09:00', endTime: '13:00', isActive: false),
-      const WeeklyTemplateItem(dayOfWeek: 7, startTime: '09:00', endTime: '13:00', isActive: false),
     ];
   }
 
@@ -37,17 +35,19 @@ class AvailabilityRepository {
         }
       }
 
-      // If templates is empty, merge with standard Mon-Sun defaults
-      final fullTemplates = List<WeeklyTemplateItem>.from(defaultWeeklyTemplates());
-      for (var i = 0; i < fullTemplates.length; i++) {
-        final existing = templates.where((t) => t.dayOfWeek == fullTemplates[i].dayOfWeek).firstOrNull;
-        if (existing != null) {
-          fullTemplates[i] = existing;
-        }
-      }
+      // If templates is empty, provide standard initial default templates
+      final resolvedTemplates = templates.isNotEmpty
+          ? templates
+          : List<WeeklyTemplateItem>.from(defaultWeeklyTemplates());
+
+      resolvedTemplates.sort((a, b) {
+        final dayCmp = a.dayOfWeek.compareTo(b.dayOfWeek);
+        if (dayCmp != 0) return dayCmp;
+        return a.startTime.compareTo(b.startTime);
+      });
 
       return {
-        'templates': fullTemplates,
+        'templates': resolvedTemplates,
         'customSlots': customSlots,
       };
     } catch (_) {
@@ -58,12 +58,20 @@ class AvailabilityRepository {
     }
   }
 
-  Future<bool> saveWeeklyTemplates(List<WeeklyTemplateItem> templates) async {
+  Future<bool> saveWeeklyTemplates(
+    List<WeeklyTemplateItem> templates, {
+    List<CustomSlotItem>? existingCustomSlots,
+  }) async {
     try {
       final active = templates.where((t) => t.isActive).map((t) => t.toJson()).toList();
+      final customPayload = existingCustomSlots?.map((cs) => {
+            'startTime': cs.startTime.toUtc().toIso8601String(),
+            'endTime': cs.endTime.toUtc().toIso8601String(),
+          }).toList() ?? [];
+
       await _apiClient.post('/doctors/availability', {
         'templates': active,
-        'customSlots': [],
+        'customSlots': customPayload,
       });
       return true;
     } catch (_) {

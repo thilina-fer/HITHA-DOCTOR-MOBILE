@@ -615,9 +615,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
   // --- Section 2: Availability Section (Minimal & Compact) ---
   Widget _buildAvailabilitySection(BuildContext context, DashboardViewModel dashVm, AuthViewModel authVm) {
-    // Generate 7 consecutive days starting today
+    // Generate 28 consecutive days starting today (4 full weeks, scrollable)
     final now = DateTime.now();
-    final dynamicDates = List.generate(7, (i) => now.add(Duration(days: i)));
+    final dynamicDates = List.generate(28, (i) => now.add(Duration(days: i)));
     final selectedDate = dynamicDates[_selectedDateIndex < dynamicDates.length ? _selectedDateIndex : 0];
 
     // Filter or synthesize availability slots for the selected date

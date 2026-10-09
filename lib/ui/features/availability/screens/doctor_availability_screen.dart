@@ -6,6 +6,7 @@ import '../../../../data/services/api_client.dart';
 import '../../../../domain/models/models.dart';
 import '../../../core/theme/hitha_theme.dart';
 import '../../../core/widgets/hitha_widgets.dart';
+import '../../dashboard/view_models/dashboard_view_model.dart';
 
 class DoctorAvailabilityScreen extends StatefulWidget {
   const DoctorAvailabilityScreen({super.key});
@@ -53,14 +54,263 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
   }
 
   Future<void> _saveWeeklyTemplates() async {
+    if (_templates.isEmpty) {
+      showHithaSnack(context, 'Please add at least one weekly availability window.', isError: true);
+      return;
+    }
+
+    for (final t in _templates) {
+      if (!_isTimeBefore(t.startTime, t.endTime)) {
+        showHithaSnack(
+          context,
+          'End time must be after start time for ${t.dayName} (${t.startTime} – ${t.endTime}).',
+          isError: true,
+        );
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
-    final success = await _repo.saveWeeklyTemplates(_templates);
+    final success = await _repo.saveWeeklyTemplates(_templates, existingCustomSlots: _customSlots);
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (success) {
+      context.read<DashboardViewModel>().loadDashboard();
       showHithaSnack(context, 'Weekly schedule updated successfully!');
     } else {
-      showHithaSnack(context, 'Schedule saved locally (offline mode).');
+      showHithaSnack(context, 'Failed to update schedule. Please check connection and try again.', isError: true);
+    }
+  }
+
+  void _addTemplateRow() {
+    final nextDay = _templates.isNotEmpty ? _templates.last.dayOfWeek : 1;
+    setState(() {
+      _templates.add(
+        WeeklyTemplateItem(
+          dayOfWeek: nextDay,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+        ),
+      );
+    });
+  }
+
+  void _removeTemplateRow(int index) {
+    setState(() {
+      _templates.removeAt(index);
+    });
+  }
+
+  void _loadStandardSchedule() {
+    setState(() {
+      _templates = AvailabilityRepository.defaultWeeklyTemplates();
+    });
+    showHithaSnack(context, 'Loaded standard Mon-Fri schedule. Tap "Save Weekly Schedule" to publish.');
+  }
+
+  TimeOfDay _parseTimeOfDay(String hhmm) {
+    final parts = hhmm.split(':');
+    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 9 : 9;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  bool _isTimeBefore(String start, String end) {
+    final sParts = start.split(':');
+    final eParts = end.split(':');
+    if (sParts.length < 2 || eParts.length < 2) return false;
+    final sMin = (int.tryParse(sParts[0]) ?? 0) * 60 + (int.tryParse(sParts[1]) ?? 0);
+    final eMin = (int.tryParse(eParts[0]) ?? 0) * 60 + (int.tryParse(eParts[1]) ?? 0);
+    return sMin < eMin;
+  }
+
+  String _formatTimeDisplay(String hhmm) {
+    final parts = hhmm.split(':');
+    if (parts.length < 2) return hhmm;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    final tod = TimeOfDay(hour: hour, minute: minute);
+    final h = tod.hourOfPeriod == 0 ? 12 : tod.hourOfPeriod;
+    final m = tod.minute.toString().padLeft(2, '0');
+    final period = tod.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$h:$m $period';
+  }
+
+  String? _calculateDurationString(String start, String end) {
+    final sParts = start.split(':');
+    final eParts = end.split(':');
+    if (sParts.length < 2 || eParts.length < 2) return null;
+    final sMin = (int.tryParse(sParts[0]) ?? 0) * 60 + (int.tryParse(sParts[1]) ?? 0);
+    final eMin = (int.tryParse(eParts[0]) ?? 0) * 60 + (int.tryParse(eParts[1]) ?? 0);
+    final diff = eMin - sMin;
+    if (diff <= 0) return null;
+    final hours = diff ~/ 60;
+    final mins = diff % 60;
+    if (mins == 0) {
+      return '$hours hr${hours > 1 ? 's' : ''} window';
+    }
+    return '${hours}h ${mins}m window';
+  }
+
+  void _showDayPicker(int index) {
+    final currentDay = _templates[index].dayOfWeek;
+    const days = [
+      {'day': 1, 'name': 'Monday'},
+      {'day': 2, 'name': 'Tuesday'},
+      {'day': 3, 'name': 'Wednesday'},
+      {'day': 4, 'name': 'Thursday'},
+      {'day': 5, 'name': 'Friday'},
+      {'day': 6, 'name': 'Saturday'},
+      {'day': 7, 'name': 'Sunday'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Select Day of Week',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: HithaColors.forest,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...days.map((d) {
+                  final dayNum = d['day'] as int;
+                  final dayName = d['name'] as String;
+                  final isSelected = dayNum == currentDay;
+
+                  return InkWell(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _templates[index] = _templates[index].copyWith(dayOfWeek: dayNum);
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFEFFDF5) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected ? const Color(0xFF86EFAC) : Colors.transparent,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 16,
+                                color: isSelected ? HithaColors.forest : const Color(0xFF64748B),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                dayName,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: isSelected ? HithaColors.forest : const Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (isSelected)
+                            const Icon(Icons.check_circle_rounded, color: HithaColors.forest, size: 18),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickStartTime(int index) async {
+    final current = _templates[index].startTime;
+    final initialTime = _parseTimeOfDay(current);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: HithaColors.forest,
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF0F172A),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final formatted =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      setState(() {
+        _templates[index] = _templates[index].copyWith(startTime: formatted);
+      });
+    }
+  }
+
+  Future<void> _pickEndTime(int index) async {
+    final current = _templates[index].endTime;
+    final initialTime = _parseTimeOfDay(current);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: HithaColors.forest,
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF0F172A),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final formatted =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      setState(() {
+        _templates[index] = _templates[index].copyWith(endTime: formatted);
+      });
     }
   }
 
@@ -497,22 +747,49 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
       children: [
+        // Header title row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Recurring Weekly Templates',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: HithaColors.forest),
+                ),
+                Text(
+                  '${_templates.length} active consultation windows configured',
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                ),
+              ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.sync_rounded, color: HithaColors.forest, size: 21),
+              tooltip: 'Sync Saved Templates',
+              onPressed: _loadData,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
         // Helper notice
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             color: const Color(0xFFEFF6FF),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFFDBEAFE)),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Icon(Icons.info_outline, size: 16, color: Color(0xFF2563EB)),
-              SizedBox(width: 8),
+              SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  'Recurring slots auto-generate client booking windows for the next 30 days.',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF1E40AF), fontWeight: FontWeight.w500),
+                  'Pricing is automatic based on your clinical category. You can schedule multiple time windows on the same day (e.g. morning 07:00 – 10:00 and evening 17:00 – 21:00).',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF1E40AF), fontWeight: FontWeight.w500, height: 1.3),
                 ),
               ),
             ],
@@ -520,144 +797,324 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         ),
         const SizedBox(height: 14),
 
-        // Day Cards
-        ..._templates.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-
-          return HithaCard(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        // Empty state
+        if (_templates.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFEDF2F7)),
+            ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: item.isActive ? const Color(0xFF16A34A) : const Color(0xFFCBD5E1),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          item.dayName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Switch.adaptive(
-                      value: item.isActive,
-                      activeTrackColor: HithaColors.forest,
-                      onChanged: (val) {
-                        setState(() {
-                          _templates[index] = item.copyWith(isActive: val);
-                        });
-                      },
-                    ),
-                  ],
+                const Icon(Icons.calendar_month_outlined, size: 40, color: Color(0xFF94A3B8)),
+                const SizedBox(height: 10),
+                const Text(
+                  'No Weekly Windows Configured',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF334155)),
                 ),
-                if (item.isActive) ...[
-                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 4),
+                const Text(
+                  'Add your recurring consultation windows to open booking slots for clients.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _addTemplateRow,
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Add Day & Window', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HithaColors.forest,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _loadStandardSchedule,
+                  child: const Text('Load Standard Weekday Schedule (Mon-Fri 09:00 - 17:00)',
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: HithaColors.mintDark)),
+                ),
+              ],
+            ),
+          )
+        else
+          // List of Template Rows
+          ..._templates.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isValidTime = _isTimeBefore(item.startTime, item.endTime);
+            final durationText = _calculateDurationString(item.startTime, item.endTime);
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isValidTime ? const Color(0xFFE2E8F0) : const Color(0xFFFCA5A5),
+                  width: isValidTime ? 1.0 : 1.2,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x060D3B66),
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Row: Day Selector + Window Label + Delete Button
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final parts = item.startTime.split(':');
-                            final initTime = TimeOfDay(
-                              hour: int.tryParse(parts[0]) ?? 9,
-                              minute: parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0,
-                            );
-                            final picked = await showTimePicker(context: context, initialTime: initTime);
-                            if (picked != null) {
-                              final formatted =
-                                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                              setState(() {
-                                _templates[index] = item.copyWith(startTime: formatted);
-                              });
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.access_time, size: 14, color: Color(0xFF64748B)),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Start: ${item.startTime}',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      // Day Selector Dropdown Button
+                      InkWell(
+                        onTap: () => _showDayPicker(index),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFBBF7D0)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.event_available_rounded, size: 15, color: HithaColors.forest),
+                              const SizedBox(width: 6),
+                              Text(
+                                item.dayName,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: HithaColors.forest,
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: HithaColors.forest),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final parts = item.endTime.split(':');
-                            final initTime = TimeOfDay(
-                              hour: int.tryParse(parts[0]) ?? 17,
-                              minute: parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0,
-                            );
-                            final picked = await showTimePicker(context: context, initialTime: initTime);
-                            if (picked != null) {
-                              final formatted =
-                                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                              setState(() {
-                                _templates[index] = item.copyWith(endTime: formatted);
-                              });
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.access_time_filled, size: 14, color: Color(0xFF64748B)),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'End: ${item.endTime}',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+
+                      // Window Duration or Action Tag + Delete Button
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (durationText != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                durationText,
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF475569),
                                 ),
-                              ],
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+
+                          // Delete Button
+                          InkWell(
+                            onTap: () => _removeTemplateRow(index),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF2F2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFFEE2E2)),
+                              ),
+                              child: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
                             ),
                           ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  const SizedBox(height: 12),
+
+                  // Middle Row: Start Time Box -> Arrow -> End Time Box
+                  Row(
+                    children: [
+                      // Start Time Picker Box
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'START TIME',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF64748B),
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            InkWell(
+                              onTap: () => _pickStartTime(index),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.access_time_rounded, size: 15, color: HithaColors.forest),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _formatTimeDisplay(item.startTime),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 18),
+                        child: Icon(Icons.arrow_forward_rounded, size: 16, color: Color(0xFF94A3B8)),
+                      ),
+
+                      // End Time Picker Box
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'END TIME',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF64748B),
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            InkWell(
+                              onTap: () => _pickEndTime(index),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.access_time_filled_rounded, size: 15, color: HithaColors.forest),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _formatTimeDisplay(item.endTime),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ],
-              ],
-            ),
-          );
-        }),
 
-        const SizedBox(height: 16),
-        PrimaryButton(
-          text: 'Save Weekly Schedule',
-          loading: _isSaving,
-          onPressed: _saveWeeklyTemplates,
-        ),
+                  if (!isValidTime) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: const [
+                        Icon(Icons.error_outline_rounded, size: 13, color: Color(0xFFDC2626)),
+                        SizedBox(width: 5),
+                        Text(
+                          'Start time must be before end time',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFDC2626)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+
+        if (_templates.isNotEmpty) ...[
+          const SizedBox(height: 8),
+
+          // "+ Add Day & Window" button
+          InkWell(
+            onTap: _addTemplateRow,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: HithaColors.forest, width: 1.2),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.add_circle_outline_rounded, size: 16, color: HithaColors.forest),
+                  SizedBox(width: 8),
+                  Text(
+                    'Add Day & Window',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: HithaColors.forest,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // "Save Weekly Schedule" button
+          PrimaryButton(
+            text: 'Save Weekly Schedule',
+            icon: Icons.auto_awesome_rounded,
+            loading: _isSaving,
+            onPressed: _saveWeeklyTemplates,
+          ),
+        ],
       ],
     );
   }
