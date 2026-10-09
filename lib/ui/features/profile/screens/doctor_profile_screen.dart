@@ -946,6 +946,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         ),
         const SizedBox(height: 8),
         _buildNavTile(
+          icon: Icons.account_balance_wallet_outlined,
+          title: 'Doctor Wallet & Payouts',
+          subtitle: 'Check revenue balance & payout telemetry',
+          onTap: () => context.push('/doctor/wallet'),
+        ),
+        _buildNavTile(
           icon: Icons.payments_outlined,
           title: 'Pricing & Overrides',
           subtitle: 'Category base rates & fee change requests',

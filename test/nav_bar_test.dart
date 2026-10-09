@@ -75,4 +75,41 @@ void main() {
 
     expect(selected, equals(1));
   });
+
+  testWidgets('Tapping center elevated action button invokes onCenterButtonPressed callback', (tester) async {
+    bool centerTapped = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          extendBody: true,
+          bottomNavigationBar: FloatingPillNavBar(
+            selectedIndex: 0,
+            onItemSelected: (_) {},
+            onCenterButtonPressed: () => centerTapped = true,
+            centerButtonIcon: Icons.add_rounded,
+            items: const [
+              FloatingNavItem(
+                icon: Icons.home,
+                label: 'Home',
+                activeColor: Colors.blue,
+                activeBgColor: Colors.lightBlue,
+              ),
+              FloatingNavItem(
+                icon: Icons.person,
+                label: 'Profile',
+                activeColor: Colors.blue,
+                activeBgColor: Colors.lightBlue,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pumpAndSettle();
+
+    expect(centerTapped, isTrue);
+  });
 }

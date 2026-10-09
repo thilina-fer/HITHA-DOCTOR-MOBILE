@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 class FloatingNavItem {
   final IconData icon;
+  final IconData? activeIcon;
   final String label;
   final Color activeColor;
   final Color activeBgColor;
 
   const FloatingNavItem({
     required this.icon,
+    this.activeIcon,
     required this.label,
     required this.activeColor,
     required this.activeBgColor,
@@ -20,83 +22,216 @@ class FloatingPillNavBar extends StatelessWidget {
     required this.selectedIndex,
     required this.onItemSelected,
     required this.items,
+    this.onCenterButtonPressed,
+    this.centerButtonIcon = Icons.add_rounded,
+    this.centerButtonGradient,
+    this.centerButtonColor,
+    this.showCenterButton = true,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onItemSelected;
   final List<FloatingNavItem> items;
+  final VoidCallback? onCenterButtonPressed;
+  final IconData centerButtonIcon;
+  final Gradient? centerButtonGradient;
+  final Color? centerButtonColor;
+  final bool showCenterButton;
 
   @override
   Widget build(BuildContext context) {
+    const double barHeight = 66.0;
+    const double protrusion = 20.0;
+    const double totalHeight = barHeight + protrusion;
+    const double centerButtonSize = 56.0;
+
     return SafeArea(
       top: false,
-      child: Align(
+      bottom: true,
+      child: Container(
+        height: totalHeight,
+        margin: const EdgeInsets.only(left: 14, right: 14, bottom: 8),
         alignment: Alignment.bottomCenter,
-        heightFactor: 1.0,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(34),
-                border: Border.all(color: const Color(0xFFF0F4F2), width: 1.2),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x180D3B66),
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(items.length, (index) {
-                  final item = items[index];
-                  final isSelected = selectedIndex == index;
-
-                  return GestureDetector(
-                    onTap: () => onItemSelected(index),
-                    behavior: HitTestBehavior.opaque,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
-                      padding: isSelected
-                          ? const EdgeInsets.symmetric(horizontal: 14, vertical: 8)
-                          : const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? item.activeBgColor : Colors.transparent,
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            item.icon,
-                            size: isSelected ? 20 : 22,
-                            color: isSelected ? item.activeColor : const Color(0xFF64748B),
-                          ),
-                          if (isSelected) ...[
-                            const SizedBox(width: 7),
-                            Text(
-                              item.label,
-                              style: TextStyle(
-                                color: item.activeColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              // White Dock Bar Container
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: barHeight,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(22),
+                      topRight: Radius.circular(22),
+                      bottomLeft: Radius.circular(36),
+                      bottomRight: Radius.circular(36),
                     ),
-                  );
-                }),
+                    border: Border.all(color: const Color(0xFFF1F5F9), width: 1.0),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x180D3B66),
+                        blurRadius: 24,
+                        offset: Offset(0, 8),
+                      ),
+                      BoxShadow(
+                        color: Color(0x08000000),
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: showCenterButton ? _buildSplitContent() : _buildFullContent(),
+                ),
+              ),
+
+              // Elevated Center Button
+              if (showCenterButton)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: _buildCenterButton(centerButtonSize),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSplitContent() {
+    final half = items.length ~/ 2;
+    final leftItems = items.sublist(0, half);
+    final rightItems = items.sublist(half);
+
+    return Row(
+      children: [
+        // Left tabs
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(leftItems.length, (i) {
+              return _buildTabItem(index: i, item: leftItems[i]);
+            }),
+          ),
+        ),
+
+        // Center gap for the circular elevated button
+        const SizedBox(width: 66),
+
+        // Right tabs
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(rightItems.length, (i) {
+              final originalIndex = half + i;
+              return _buildTabItem(index: originalIndex, item: rightItems[i]);
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullContent() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(items.length, (i) {
+        return _buildTabItem(index: i, item: items[i]);
+      }),
+    );
+  }
+
+  Widget _buildTabItem({required int index, required FloatingNavItem item}) {
+    final isSelected = selectedIndex == index;
+    final activeColor = item.activeColor;
+    const inactiveColor = Color(0xFF94A3B8);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onItemSelected(index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.08 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: Icon(
+                (isSelected && item.activeIcon != null) ? item.activeIcon! : item.icon,
+                size: 22,
+                color: isSelected ? activeColor : inactiveColor,
               ),
             ),
+            const SizedBox(height: 3.5),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? activeColor : inactiveColor,
+                letterSpacing: -0.2,
+              ),
+              child: Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCenterButton(double size) {
+    final gradient = centerButtonGradient ??
+        (centerButtonColor != null
+            ? LinearGradient(colors: [centerButtonColor!, centerButtonColor!])
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+              ));
+
+    return GestureDetector(
+      onTap: onCenterButtonPressed,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: gradient,
+          border: Border.all(color: Colors.white, width: 4.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x4D7C5CFC),
+              blurRadius: 16,
+              offset: Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Color(0x180D3B66),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(
+            centerButtonIcon,
+            color: Colors.white,
+            size: 27,
           ),
         ),
       ),
