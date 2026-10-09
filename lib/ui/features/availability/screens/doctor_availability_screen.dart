@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/availability_repository.dart';
+import '../../../../data/repositories/bookings_repository.dart';
+import '../../../../data/repositories/dashboard_repository.dart';
 import '../../../../data/services/api_client.dart';
 import '../../../../domain/models/models.dart';
 import '../../../core/theme/hitha_theme.dart';
@@ -24,6 +26,8 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
   List<WeeklyTemplateItem> _templates = [];
   List<CustomSlotItem> _customSlots = [];
   List<BlockedDateItem> _blockedDates = [];
+  List<BookingItem> _bookings = [];
+  List<AvailabilityWindow> _computedWindows = [];
 
   @override
   void initState() {
@@ -36,13 +40,30 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final config = await _repo.getAvailabilityConfig();
-      final blocked = await _repo.getBlockedDates();
+      final apiClient = context.read<ApiClient>();
+      final bookingsRepo = BookingsRepository(apiClient);
+      final dashRepo = DashboardRepository(apiClient);
+
+      final results = await Future.wait([
+        _repo.getAvailabilityConfig(),
+        _repo.getBlockedDates(),
+        bookingsRepo.getBookings(size: 50),
+        dashRepo.getAvailabilityWindows(),
+      ]);
+
+      final config = results[0] as Map<String, dynamic>;
+      final blocked = results[1] as List<BlockedDateItem>;
+      final bookings = results[2] as List<BookingItem>;
+      final windows = results[3] as List<AvailabilityWindow>;
+
       if (mounted) {
         setState(() {
-          _templates = (config['templates'] as List<WeeklyTemplateItem>?) ?? AvailabilityRepository.defaultWeeklyTemplates();
+          _templates = (config['templates'] as List<WeeklyTemplateItem>?) ??
+              AvailabilityRepository.defaultWeeklyTemplates();
           _customSlots = (config['customSlots'] as List<CustomSlotItem>?) ?? [];
           _blockedDates = blocked;
+          _bookings = bookings;
+          _computedWindows = windows;
           _isLoading = false;
         });
       }
@@ -312,6 +333,351 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         _templates[index] = _templates[index].copyWith(endTime: formatted);
       });
     }
+  }
+
+  List<_GeneratedSlotPreview> _generateSlotsForTemplate(WeeklyTemplateItem item) {
+    if (!_isTimeBefore(item.startTime, item.endTime)) return [];
+
+    final partsStart = item.startTime.split(':');
+    final partsEnd = item.endTime.split(':');
+    final sH = int.tryParse(partsStart[0]) ?? 9;
+    final sM = partsStart.length > 1 ? int.tryParse(partsStart[1]) ?? 0 : 0;
+    final eH = int.tryParse(partsEnd[0]) ?? 17;
+    final eM = partsEnd.length > 1 ? int.tryParse(partsEnd[1]) ?? 0 : 0;
+
+    final now = DateTime.now();
+    var current = DateTime(now.year, now.month, now.day, sH, sM);
+    final finish = DateTime(now.year, now.month, now.day, eH, eM);
+
+    final List<_GeneratedSlotPreview> slots = [];
+
+    while (current.isBefore(finish)) {
+      var next = current.add(const Duration(hours: 1));
+      if (next.isAfter(finish)) next = finish;
+
+      final startStr =
+          '${current.hour.toString().padLeft(2, '0')}:${current.minute.toString().padLeft(2, '0')}';
+      final endStr =
+          '${next.hour.toString().padLeft(2, '0')}:${next.minute.toString().padLeft(2, '0')}';
+
+      // Check if any booking on this dayOfWeek overlaps with this slot interval
+      BookingItem? matchedBooking;
+      for (final b in _bookings) {
+        if (b.scheduledStartTime.weekday == item.dayOfWeek &&
+            b.status != BookingStatus.CANCELLED) {
+          final bStartMin = b.scheduledStartTime.hour * 60 + b.scheduledStartTime.minute;
+          final bEndMin = b.scheduledEndTime.hour * 60 + b.scheduledEndTime.minute;
+          final slotStartMin = current.hour * 60 + current.minute;
+          final slotEndMin = next.hour * 60 + next.minute;
+
+          if (bStartMin < slotEndMin && bEndMin > slotStartMin) {
+            matchedBooking = b;
+            break;
+          }
+        }
+      }
+
+      // Also check computed windows from backend
+      bool isBookedFromWindow = false;
+      for (final w in _computedWindows) {
+        if (w.dayOfWeek == item.dayOfWeek && w.isBooked) {
+          if (w.startTime == startStr) {
+            isBookedFromWindow = true;
+            break;
+          }
+        }
+      }
+
+      final isBooked = matchedBooking != null || isBookedFromWindow;
+
+      slots.add(
+        _GeneratedSlotPreview(
+          startTime: startStr,
+          endTime: endStr,
+          isBooked: isBooked,
+          patientName: matchedBooking?.patientName,
+          bookingReference: matchedBooking?.bookingReference,
+        ),
+      );
+
+      current = next;
+    }
+
+    return slots;
+  }
+
+  int _calculateSlotsCount(WeeklyTemplateItem item) {
+    return _generateSlotsForTemplate(item).length;
+  }
+
+  int _calculateBookedSlotsCount(WeeklyTemplateItem item) {
+    return _generateSlotsForTemplate(item).where((s) => s.isBooked).length;
+  }
+
+  void _showSlotsBreakdownSheet(WeeklyTemplateItem item) {
+    final slots = _generateSlotsForTemplate(item);
+    final bookedCount = slots.where((s) => s.isBooked).length;
+    final openCount = slots.where((s) => !s.isBooked).length;
+    final durationText = _calculateDurationString(item.startTime, item.endTime) ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top drag handle
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10, bottom: 6),
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                // Sheet Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0FDF4),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.event_available_rounded, size: 13, color: HithaColors.forest),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        item.dayName,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: HithaColors.forest,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (durationText.isNotEmpty)
+                                  Text(
+                                    durationText,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${_formatTimeDisplay(item.startTime)} – ${_formatTimeDisplay(item.endTime)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF0F172A),
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Consultation slots breakdown for this recurring window',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Metrics Strip
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildMetricPill('TOTAL SLOTS', '${slots.length}', const Color(0xFF0F172A)),
+                        Container(width: 1, height: 22, color: const Color(0xFFE2E8F0)),
+                        _buildMetricPill('OPEN', '$openCount', const Color(0xFF16A34A)),
+                        Container(width: 1, height: 22, color: const Color(0xFFE2E8F0)),
+                        _buildMetricPill('BOOKED', '$bookedCount', const Color(0xFF2563EB)),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+                // Slots List
+                Expanded(
+                  child: slots.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No valid slots can be generated for this time range.',
+                            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+                          itemCount: slots.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 8),
+                          itemBuilder: (context, slotIdx) {
+                            final slot = slots[slotIdx];
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                              decoration: BoxDecoration(
+                                color: slot.isBooked ? const Color(0xFFF1F5F9) : const Color(0xFFFFFFFF),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: slot.isBooked ? const Color(0xFFCBD5E1) : const Color(0xFFE2E8F0),
+                                  width: 0.9,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Colored circle
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: slot.isBooked ? const Color(0xFF3B82F6) : const Color(0xFF10B981),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+
+                                  // Slot Time and Subtitle
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${_formatTimeDisplay(slot.startTime)} – ${_formatTimeDisplay(slot.endTime)}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: slot.isBooked ? const Color(0xFF475569) : const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          slot.isBooked
+                                              ? (slot.patientName != null
+                                                  ? 'Booked by: ${slot.patientName}'
+                                                  : (slot.bookingReference != null
+                                                      ? 'Booked • Ref ${slot.bookingReference}'
+                                                      : 'Booked Consultation'))
+                                              : 'Available for client booking',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: slot.isBooked ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                                            fontWeight: slot.isBooked ? FontWeight.w600 : FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Status Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: slot.isBooked ? const Color(0xFFEFF6FF) : const Color(0xFFDCFCE7),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      slot.isBooked ? 'BOOKED' : 'OPEN',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: slot.isBooked ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMetricPill(String label, String value, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            color: color,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF64748B),
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _showAddCustomSlotDialog() async {
@@ -910,18 +1276,30 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (durationText != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                durationText,
-                                style: const TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF475569),
+                            InkWell(
+                              onTap: isValidTime ? () => _showSlotsBreakdownSheet(item) : null,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFDBEAFE)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.remove_red_eye_rounded, size: 12, color: Color(0xFF2563EB)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      durationText,
+                                      style: const TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1D4ED8),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -1053,6 +1431,66 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                       ),
                     ],
                   ),
+
+                  if (isValidTime) ...[
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () => _showSlotsBreakdownSheet(item),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.schedule_rounded, size: 15, color: HithaColors.forest),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Builder(
+                                builder: (_) {
+                                  final total = _calculateSlotsCount(item);
+                                  final booked = _calculateBookedSlotsCount(item);
+                                  return RichText(
+                                    text: TextSpan(
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1E293B),
+                                      ),
+                                      children: [
+                                        TextSpan(text: '$total slots generated'),
+                                        if (booked > 0)
+                                          TextSpan(
+                                            text: '  •  $booked booked',
+                                            style: const TextStyle(
+                                              color: Color(0xFF2563EB),
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const Text(
+                              'View Slots',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: HithaColors.forest,
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: HithaColors.forest),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
 
                   if (!isValidTime) ...[
                     const SizedBox(height: 10),
@@ -1352,4 +1790,20 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       ],
     );
   }
+}
+
+class _GeneratedSlotPreview {
+  final String startTime;
+  final String endTime;
+  final bool isBooked;
+  final String? patientName;
+  final String? bookingReference;
+
+  const _GeneratedSlotPreview({
+    required this.startTime,
+    required this.endTime,
+    required this.isBooked,
+    this.patientName,
+    this.bookingReference,
+  });
 }
