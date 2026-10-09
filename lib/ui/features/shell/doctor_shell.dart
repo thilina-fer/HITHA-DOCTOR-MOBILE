@@ -244,7 +244,8 @@ class DoctorShell extends StatelessWidget {
     final currentIndex = _calculateSelectedIndex(context);
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: child,
       bottomNavigationBar: FloatingPillNavBar(
         selectedIndex: currentIndex,

@@ -40,68 +40,72 @@ class FloatingPillNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double barHeight = 66.0;
-    const double protrusion = 20.0;
+    const double barHeight = 58.0;
+    const double protrusion = 16.0;
     const double totalHeight = barHeight + protrusion;
-    const double centerButtonSize = 56.0;
+    const double centerButtonSize = 50.0;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final double bottomMargin = bottomInset > 0 ? (bottomInset * 0.3) : 2.0;
 
-    return SafeArea(
-      top: false,
-      bottom: true,
-      child: Container(
-        height: totalHeight,
-        margin: const EdgeInsets.only(left: 14, right: 14, bottom: 8),
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomMargin),
+      child: Align(
         alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.bottomCenter,
-            children: [
-              // White Dock Bar Container
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: barHeight,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(22),
-                      topRight: Radius.circular(22),
-                      bottomLeft: Radius.circular(36),
-                      bottomRight: Radius.circular(36),
-                    ),
-                    border: Border.all(color: const Color(0xFFF1F5F9), width: 1.0),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x180D3B66),
-                        blurRadius: 24,
-                        offset: Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: Color(0x08000000),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: showCenterButton ? _buildSplitContent() : _buildFullContent(),
-                ),
-              ),
-
-              // Elevated Center Button
-              if (showCenterButton)
+        heightFactor: 1.0,
+        child: Container(
+          height: totalHeight,
+          margin: const EdgeInsets.symmetric(horizontal: 14),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.bottomCenter,
+              children: [
+                // White Dock Bar Container
                 Positioned(
-                  top: 0,
                   left: 0,
                   right: 0,
-                  child: Center(
-                    child: _buildCenterButton(centerButtonSize),
+                  bottom: 0,
+                  height: barHeight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(32),
+                        bottomRight: Radius.circular(32),
+                      ),
+                      border: Border.all(color: const Color(0xFFF1F5F9), width: 1.0),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x140D3B66),
+                          blurRadius: 20,
+                          offset: Offset(0, 6),
+                        ),
+                        BoxShadow(
+                          color: Color(0x06000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: showCenterButton ? _buildSplitContent() : _buildFullContent(),
                   ),
                 ),
-            ],
+
+                // Elevated Center Button
+                if (showCenterButton)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: _buildCenterButton(centerButtonSize),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -126,7 +130,7 @@ class FloatingPillNavBar extends StatelessWidget {
         ),
 
         // Center gap for the circular elevated button
-        const SizedBox(width: 66),
+        const SizedBox(width: 58),
 
         // Right tabs
         Expanded(
@@ -164,20 +168,20 @@ class FloatingPillNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedScale(
-              scale: isSelected ? 1.08 : 1.0,
+              scale: isSelected ? 1.06 : 1.0,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
               child: Icon(
                 (isSelected && item.activeIcon != null) ? item.activeIcon! : item.icon,
-                size: 22,
+                size: 21,
                 color: isSelected ? activeColor : inactiveColor,
               ),
             ),
-            const SizedBox(height: 3.5),
+            const SizedBox(height: 2.5),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? activeColor : inactiveColor,
                 letterSpacing: -0.2,
@@ -213,16 +217,16 @@ class FloatingPillNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: gradient,
-          border: Border.all(color: Colors.white, width: 4.5),
+          border: Border.all(color: Colors.white, width: 4.0),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x4D7C5CFC),
-              blurRadius: 16,
-              offset: Offset(0, 6),
+              color: Color(0x407C5CFC),
+              blurRadius: 14,
+              offset: Offset(0, 5),
             ),
             BoxShadow(
-              color: Color(0x180D3B66),
-              blurRadius: 8,
+              color: Color(0x140D3B66),
+              blurRadius: 6,
               offset: Offset(0, 2),
             ),
           ],
@@ -231,7 +235,7 @@ class FloatingPillNavBar extends StatelessWidget {
           child: Icon(
             centerButtonIcon,
             color: Colors.white,
-            size: 27,
+            size: 25,
           ),
         ),
       ),
