@@ -9,6 +9,7 @@ import '../../../core/theme/hitha_theme.dart';
 import '../../../core/widgets/hitha_widgets.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../view_models/dashboard_view_model.dart';
+import '../widgets/doctor_greeting_banner.dart';
 
 class DoctorDashboardScreen extends StatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -220,8 +221,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Clean Minimal Greeting & Status Header
-                      _buildGreetingHeader(context, authVm, doctor),
+                      // Dark Forest Green Greeting & Telemetry Banner
+                      _buildGreetingHeader(context, authVm, dashVm, doctor),
                       const SizedBox(height: 14),
 
                       // SLMC Review Banner (if unverified or pending)
@@ -326,95 +327,60 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
-  // --- Clean Minimal Greeting & Status Header ---
-  Widget _buildGreetingHeader(BuildContext context, AuthViewModel authVm, DoctorProfile? doctor) {
-    final status = doctor?.status ?? DoctorStatus.ONLINE;
-    final doctorName = (doctor != null && doctor.firstName.isNotEmpty)
-        ? 'Dr. ${doctor.firstName}'
-        : 'Dr. Thilina';
+  // --- Dark Forest Green Greeting & Telemetry Banner ---
+  Widget _buildGreetingHeader(
+    BuildContext context,
+    AuthViewModel authVm,
+    DashboardViewModel dashVm,
+    DoctorProfile? doctor,
+  ) {
+    final ongoingCount = dashVm.todayBookings
+        .where((b) => b.status == BookingStatus.ACTIVE)
+        .length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Good morning,',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF64748B),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Row(
-          children: [
-            Text(
-              doctorName,
-              style: const TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(width: 10),
-
-            // Minimal Status Pill Dropdown
-            GestureDetector(
-              onTap: () => _showStatusPicker(context, authVm),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F8F0),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFC6F0D9), width: 0.8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: status == DoctorStatus.ONLINE
-                            ? const Color(0xFF10B981)
-                            : status == DoctorStatus.BUSY
-                                ? const Color(0xFFF59E0B)
-                                : const Color(0xFF94A3B8),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      status.label,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF065F46),
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 14,
-                      color: Color(0xFF065F46),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Welcome back to your digital sanctuary.',
-          style: TextStyle(
-            fontSize: 12,
-            color: Color(0xFF64748B),
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ],
+    return DoctorGreetingBanner(
+      doctor: doctor,
+      ongoingSessionsCount: ongoingCount,
+      onStatusChangeTap: () => _showStatusPicker(context, authVm),
+      onOngoingSessionsTap: () => context.go(Routes.bookings),
+      onEditProfileTap: () => context.go(Routes.profile),
+      onLogoutTap: () => _confirmSignOut(context, authVm),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context, AuthViewModel authVm) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Sign out of Doctor Portal?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        content: const Text(
+          'You will need your registered credentials to sign in again. Active sessions will pause.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await authVm.logout();
+      if (context.mounted) {
+        context.go(Routes.login);
+      }
+    }
   }
 
   // --- Section 1: Next Session Card (Minimal & Compact) ---
